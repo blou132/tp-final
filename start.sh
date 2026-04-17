@@ -37,7 +37,17 @@ if [ ! -f .env ]; then
     echo ".env cree depuis .env.example"
 fi
 
+echo "Reinitialisation des conteneurs/volumes du projet..."
+dcompose down -v --remove-orphans >/dev/null 2>&1 || true
+
 dcompose up -d --build
+
+dcompose exec -T app sh -lc "mkdir -p \
+storage/framework/cache \
+storage/framework/sessions \
+storage/framework/views \
+storage/logs \
+bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache"
 
 if ! grep -q '^APP_KEY=base64:' .env; then
     dcompose exec -T app php artisan key:generate --force

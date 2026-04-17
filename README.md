@@ -126,6 +126,7 @@ Application web: `http://127.0.0.1:8000`
 ```
 
 `start.sh` detecte automatiquement si Docker doit etre lance avec `sudo`.
+Le script relance l'environnement proprement (reset des conteneurs/volumes du projet) puis reapplique les migrations/seed.
 
 ### Lancer les conteneurs
 ```bash
