@@ -15,9 +15,9 @@ class TicketFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => fake()->sentence(5),
-            'description' => fake()->paragraph(3),
-            'status' => fake()->randomElement(TicketStatus::values()),
+            'title' => $this->faker->sentence(5),
+            'description' => $this->faker->paragraph(3),
+            'status' => $this->faker->randomElement(TicketStatus::values()),
             'is_flagged' => false,
             'user_id' => User::factory(),
         ];

@@ -26,6 +26,11 @@ RUN apk add --no-cache \
     && docker-php-ext-enable mongodb \
     && apk del $PHPIZE_DEPS
 
+RUN { \
+    echo '[www]'; \
+    echo 'clear_env = no'; \
+} > /usr/local/etc/php-fpm.d/zz-clear-env.conf
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html

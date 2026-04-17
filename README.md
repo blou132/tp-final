@@ -126,7 +126,7 @@ Application web: `http://127.0.0.1:8000`
 ```
 
 `start.sh` detecte automatiquement si Docker doit etre lance avec `sudo`.
-Le script relance l'environnement proprement (reset des conteneurs/volumes du projet) puis reapplique les migrations/seed.
+Le script relance l'environnement proprement (reset des conteneurs/volumes du projet), met a jour le `.env`, le copie dans le conteneur `app`, puis reapplique les migrations/seed.
 
 ### Lancer les conteneurs
 ```bash
@@ -135,8 +135,6 @@ docker compose up -d --build
 
 ### Initialiser l'application
 ```bash
-docker compose exec app cp .env.example .env
-docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --seed
 ```
 
@@ -145,6 +143,13 @@ Application web: `http://localhost:8000`
 Services:
 - MySQL: `localhost:3307`
 - MongoDB: `localhost:27017`
+
+### Depannage rapide (HTTP 500 "Please provide a valid cache path")
+```bash
+./start.sh
+sudo docker compose exec -T app php artisan optimize:clear || true
+sudo docker compose restart app nginx
+```
 
 ## 10. Tests
 ```bash
