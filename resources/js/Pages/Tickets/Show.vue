@@ -79,7 +79,7 @@ const formatDate = (value) => {
                         <dd class="mt-1 text-slate-800">{{ formatDate(ticket.updated_at) }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">ID</dt>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.id') }}</dt>
                         <dd class="mono mt-1 text-slate-700">#{{ ticket.id }}</dd>
                     </div>
                 </dl>

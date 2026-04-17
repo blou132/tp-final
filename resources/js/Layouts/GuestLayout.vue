@@ -44,7 +44,7 @@ const { t } = useI18n();
                     <div class="mb-5 flex justify-center lg:justify-start">
                         <Link href="/" class="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-slate-600 transition hover:bg-white/70 hover:text-slate-900">
                             <ApplicationLogo class="h-10 w-10 fill-current text-slate-700" />
-                            <span class="text-sm font-semibold tracking-wide">Support Suite</span>
+                            <span class="text-sm font-semibold tracking-wide">{{ t('common.support_suite') }}</span>
                         </Link>
                     </div>
 

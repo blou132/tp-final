@@ -7,6 +7,9 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
 import { nextTick, ref } from 'vue';
+import { useI18n } from '@/composables/useI18n';
+
+const { t } = useI18n();
 
 const confirmingUserDeletion = ref(false);
 const passwordInput = ref(null);
@@ -39,38 +42,38 @@ const closeModal = () => {
 <template>
     <section class="space-y-4">
         <header>
-            <h2 class="text-lg font-semibold text-slate-900">Delete Account</h2>
+            <h2 class="text-lg font-semibold text-slate-900">{{ t('profile.delete_title') }}</h2>
             <p class="mt-1 text-sm text-slate-500">
-                Permanently remove your account and all related data.
+                {{ t('profile.delete_subtitle') }}
             </p>
         </header>
 
-        <DangerButton @click="confirmUserDeletion">Delete Account</DangerButton>
+        <DangerButton @click="confirmUserDeletion">{{ t('profile.delete_button') }}</DangerButton>
 
         <Modal :show="confirmingUserDeletion" @close="closeModal">
             <div class="p-6">
-                <h3 class="text-lg font-semibold text-slate-900">Are you sure?</h3>
+                <h3 class="text-lg font-semibold text-slate-900">{{ t('profile.delete_confirm_title') }}</h3>
                 <p class="mt-2 text-sm text-slate-500">
-                    Please confirm by entering your password. This action is irreversible.
+                    {{ t('profile.delete_confirm_text') }}
                 </p>
 
                 <div class="mt-6">
-                    <InputLabel for="password" value="Password" class="sr-only" />
+                    <InputLabel for="password" :value="t('common.password')" class="sr-only" />
                     <TextInput
                         id="password"
                         ref="passwordInput"
                         v-model="form.password"
                         type="password"
                         class="mt-1 block w-full"
-                        placeholder="Password"
+                        :placeholder="t('profile.delete_confirm_placeholder')"
                         @keyup.enter="deleteUser"
                     />
                     <InputError :message="form.errors.password" class="mt-2" />
                 </div>
 
                 <div class="mt-6 flex justify-end gap-2">
-                    <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
-                    <DangerButton :disabled="form.processing" @click="deleteUser">Delete Account</DangerButton>
+                    <SecondaryButton @click="closeModal">{{ t('common.cancel') }}</SecondaryButton>
+                    <DangerButton :disabled="form.processing" @click="deleteUser">{{ t('profile.delete_button') }}</DangerButton>
                 </div>
             </div>
         </Modal>

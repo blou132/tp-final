@@ -5,7 +5,7 @@ export function useI18n() {
     const page = usePage();
 
     const translations = computed(() => page.props.translations ?? {});
-    const locale = computed(() => page.props.locale ?? 'en');
+    const locale = computed(() => page.props.locale ?? 'fr');
     const supportedLocales = computed(() => page.props.supportedLocales ?? ['en', 'fr']);
 
     const t = (key, fallback = null) => {

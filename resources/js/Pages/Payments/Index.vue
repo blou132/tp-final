@@ -208,14 +208,14 @@ const formatDate = (value) => {
         <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
             <div>
                 <div class="table-shell reveal">
-                    <table class="min-w-full divide-y divide-slate-200/70">
+                    <table class="min-w-[680px] w-full divide-y divide-slate-200/70">
                         <thead class="table-head sticky top-0 z-10">
                             <tr>
                                 <th class="table-cell text-left">#</th>
                                 <th class="table-cell text-left">{{ t('common.amount') }}</th>
                                 <th class="table-cell text-left">{{ t('common.status') }}</th>
-                                <th class="table-cell text-left">{{ t('common.owner') }}</th>
-                                <th class="table-cell text-left">{{ t('common.created_at') }}</th>
+                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.owner') }}</th>
+                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.created_at') }}</th>
                                 <th class="table-cell text-left">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
@@ -225,8 +225,8 @@ const formatDate = (value) => {
                                 <td class="table-cell mono text-xs text-slate-500">#{{ payment.id }}</td>
                                 <td class="table-cell text-sm font-semibold text-slate-900">{{ formatMoney(payment.amount) }} €</td>
                                 <td class="table-cell"><StatusBadge :status="payment.status" /></td>
-                                <td class="table-cell text-slate-600">{{ payment.user?.email ?? '-' }}</td>
-                                <td class="table-cell text-slate-600">{{ formatDate(payment.created_at) }}</td>
+                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ payment.user?.email ?? '-' }}</td>
+                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatDate(payment.created_at) }}</td>
                                 <td class="table-cell">
                                     <div class="flex flex-wrap gap-1">
                                         <Link :href="route('payments.show', payment.id)" class="btn-ghost">{{ t('common.details') }}</Link>

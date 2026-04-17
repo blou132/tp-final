@@ -78,7 +78,7 @@ const formatMoney = (value) => {
                         <dd class="mt-1 text-slate-800">{{ formatDate(payment.updated_at) }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">ID</dt>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.id') }}</dt>
                         <dd class="mono mt-1 text-slate-700">#{{ payment.id }}</dd>
                     </div>
                 </dl>

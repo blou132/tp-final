@@ -5,6 +5,9 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { useI18n } from '@/composables/useI18n';
+
+const { t } = useI18n();
 
 const form = useForm({
     name: '',
@@ -22,16 +25,16 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Register" />
+        <Head :title="t('auth.register_page_title')" />
 
         <header class="mb-6">
-            <h1 class="text-xl font-bold text-slate-900">Create account</h1>
-            <p class="mt-1 text-sm text-slate-500">Get access to the support and payment operations workspace.</p>
+            <h1 class="text-xl font-bold text-slate-900">{{ t('auth.register_title') }}</h1>
+            <p class="mt-1 text-sm text-slate-500">{{ t('auth.register_subtitle') }}</p>
         </header>
 
         <form @submit.prevent="submit" class="space-y-4">
             <div>
-                <InputLabel for="name" value="Name" />
+                <InputLabel for="name" :value="t('common.name')" />
                 <TextInput
                     id="name"
                     type="text"
@@ -45,7 +48,7 @@ const submit = () => {
             </div>
 
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" :value="t('common.email')" />
                 <TextInput
                     id="email"
                     type="email"
@@ -58,7 +61,7 @@ const submit = () => {
             </div>
 
             <div>
-                <InputLabel for="password" value="Password" />
+                <InputLabel for="password" :value="t('common.password')" />
                 <TextInput
                     id="password"
                     type="password"
@@ -71,7 +74,7 @@ const submit = () => {
             </div>
 
             <div>
-                <InputLabel for="password_confirmation" value="Confirm Password" />
+                <InputLabel for="password_confirmation" :value="t('common.password_confirmation')" />
                 <TextInput
                     id="password_confirmation"
                     type="password"
@@ -85,13 +88,15 @@ const submit = () => {
 
             <div class="pt-2">
                 <PrimaryButton class="w-full justify-center" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Register
+                    {{ t('auth.register_button') }}
                 </PrimaryButton>
             </div>
 
             <p class="text-center text-sm text-slate-500">
-                Already registered?
-                <Link :href="route('login')" class="font-semibold text-slate-800 underline-offset-4 hover:underline">Log in</Link>
+                {{ t('auth.already_registered') }}
+                <Link :href="route('login')" class="font-semibold text-slate-800 underline-offset-4 hover:underline">
+                    {{ t('auth.login_link') }}
+                </Link>
             </p>
         </form>
     </GuestLayout>

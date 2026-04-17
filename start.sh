@@ -76,6 +76,8 @@ if [ ! -f .env ]; then
 fi
 
 upsert_env "APP_URL" "http://localhost"
+upsert_env "APP_LOCALE" "fr"
+upsert_env "APP_FALLBACK_LOCALE" "fr"
 upsert_env "DB_CONNECTION" "mysql"
 upsert_env "DB_HOST" "mysql"
 upsert_env "DB_PORT" "3306"
@@ -103,9 +105,13 @@ if ! grep -q '^APP_KEY=base64:' .env; then
 fi
 
 echo "Reinitialisation des conteneurs/volumes du projet..."
-dcompose down -v --remove-orphans >/dev/null 2>&1 || true
+dcompose down -v --remove-orphans
 
-dcompose up -d --build
+echo "Build de l'image applicative (sans cache)..."
+dcompose build --no-cache app
+
+echo "Demarrage des services..."
+dcompose up -d --force-recreate
 
 if ! dcompose cp .env app:/var/www/html/.env >/dev/null 2>&1; then
     dcompose exec -T app sh -lc "cat > /var/www/html/.env" < .env
@@ -170,4 +176,4 @@ echo "Application prete : http://localhost:8000"
 echo "Admin : admin@example.com / password"
 echo "User  : user@example.com / password"
 
-open_browser "http://localhost:8000"
+open_browser "http://localhost:8000/?v=$(date +%s)"

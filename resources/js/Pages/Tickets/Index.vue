@@ -204,15 +204,15 @@ const excerpt = (value) => {
         <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
             <div>
                 <div class="table-shell reveal">
-                    <table class="min-w-full divide-y divide-slate-200/70">
+                    <table class="min-w-[720px] w-full divide-y divide-slate-200/70">
                         <thead class="table-head sticky top-0 z-10">
                             <tr>
                                 <th class="table-cell text-left">#</th>
                                 <th class="table-cell text-left">{{ t('common.title') }}</th>
                                 <th class="table-cell text-left">{{ t('common.status') }}</th>
-                                <th class="table-cell text-left">{{ t('common.owner') }}</th>
-                                <th class="table-cell text-left">{{ t('common.flagged') }}</th>
-                                <th class="table-cell text-left">{{ t('common.created_at') }}</th>
+                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.owner') }}</th>
+                                <th class="table-cell text-left hidden lg:table-cell">{{ t('common.flagged') }}</th>
+                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.created_at') }}</th>
                                 <th class="table-cell text-left">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
@@ -227,8 +227,8 @@ const excerpt = (value) => {
                                     <p class="mt-1 text-xs text-slate-500">{{ excerpt(ticket.description) }}</p>
                                 </td>
                                 <td class="table-cell"><StatusBadge :status="ticket.status" /></td>
-                                <td class="table-cell text-slate-600">{{ ticket.user?.email ?? '-' }}</td>
-                                <td class="table-cell">
+                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ ticket.user?.email ?? '-' }}</td>
+                                <td class="table-cell hidden lg:table-cell">
                                     <span
                                         class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
                                         :class="
@@ -240,7 +240,7 @@ const excerpt = (value) => {
                                         {{ ticket.is_flagged ? t('common.yes') : t('common.no') }}
                                     </span>
                                 </td>
-                                <td class="table-cell text-slate-600">{{ formatDate(ticket.created_at) }}</td>
+                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatDate(ticket.created_at) }}</td>
                                 <td class="table-cell">
                                     <div class="flex flex-wrap gap-1">
                                         <Link :href="route('tickets.show', ticket.id)" class="btn-ghost">{{ t('common.details') }}</Link>

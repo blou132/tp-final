@@ -101,7 +101,7 @@
     }
 
     .table-shell {
-        @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_14px_34px_-24px_rgba(15,23,42,0.45)];
+        @apply overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-[0_14px_34px_-24px_rgba(15,23,42,0.45)];
     }
 
     .table-head {
@@ -109,7 +109,7 @@
     }
 
     .table-cell {
-        @apply px-4 py-3 text-sm text-slate-700;
+        @apply px-3 py-3 text-sm text-slate-700 sm:px-4;
     }
 
     .mono {

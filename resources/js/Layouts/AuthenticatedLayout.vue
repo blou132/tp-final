@@ -97,12 +97,12 @@ const closeMobileSidebar = () => {
                     <ApplicationLogo class="h-9 w-9 fill-current text-slate-800" />
                     <div>
                         <p class="text-sm font-bold tracking-tight text-slate-900">{{ t('app_name') }}</p>
-                        <p class="text-xs text-slate-500">Support Workspace</p>
+                        <p class="text-xs text-slate-500">{{ t('common.support_workspace') }}</p>
                     </div>
                 </Link>
 
                 <div class="mt-6 rounded-xl border border-slate-200/80 bg-slate-50/85 px-3 py-2 text-xs text-slate-600">
-                    <span class="font-semibold uppercase tracking-wide text-slate-500">Role</span>
+                    <span class="font-semibold uppercase tracking-wide text-slate-500">{{ t('common.role_label') }}</span>
                     <span class="mono ml-2 rounded bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
                         {{ roleLabel }}
                     </span>
