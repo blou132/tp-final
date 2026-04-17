@@ -125,6 +125,8 @@ Application web: `http://127.0.0.1:8000`
 ./start.sh
 ```
 
+`start.sh` detecte automatiquement si Docker doit etre lance avec `sudo`.
+
 ### Lancer les conteneurs
 ```bash
 docker compose up -d --build

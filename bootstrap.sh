@@ -36,20 +36,8 @@ echo "[4/6] Ajout de l'utilisateur au groupe docker..."
 sudo usermod -aG docker "$USER" || true
 
 echo "[5/6] Verification Docker..."
-if command -v sg >/dev/null 2>&1; then
-    sg docker -c "docker --version && docker compose version"
-else
-    echo "La commande 'sg' n'est pas disponible."
-    echo "Reconnecte-toi puis execute:"
-    echo "docker --version"
-    echo "docker compose version"
-fi
+sudo docker --version
+sudo docker compose version
 
 echo "[6/6] Lancement automatique de l'application..."
-if command -v sg >/dev/null 2>&1; then
-    sg docker -c "cd '$ROOT_DIR' && ./start.sh"
-else
-    echo "Impossible de lancer automatiquement sans 'sg'."
-    echo "Reconnecte-toi puis execute: ./start.sh"
-    exit 1
-fi
+./start.sh
