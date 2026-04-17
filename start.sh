@@ -119,13 +119,28 @@ storage/framework/views \
 storage/logs \
 bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache"
 
-echo "Attente de la base de donnees..."
-MAX_RETRIES=25
+echo "Attente de MySQL..."
+MAX_RETRIES=90
 COUNTER=0
-until lartisan migrate:status >/dev/null 2>&1; do
+until dcompose exec -T mysql sh -lc "mysqladmin ping -h127.0.0.1 -uroot -proot --silent" >/dev/null 2>&1; do
     COUNTER=$((COUNTER + 1))
     if [ "$COUNTER" -ge "$MAX_RETRIES" ]; then
-        echo "La base de donnees ne repond pas a temps."
+        echo "MySQL ne repond pas a temps."
+        dcompose logs --tail=120 mysql || true
+        exit 1
+    fi
+    sleep 2
+done
+
+echo "Attente de la connexion Laravel -> MySQL..."
+MAX_RETRIES=60
+COUNTER=0
+until dcompose exec -T --user www-data app php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $kernel=$app->make("Illuminate\\Contracts\\Console\\Kernel"); $kernel->bootstrap(); Illuminate\Support\Facades\DB::select("SELECT 1");' >/dev/null 2>&1; do
+    COUNTER=$((COUNTER + 1))
+    if [ "$COUNTER" -ge "$MAX_RETRIES" ]; then
+        echo "La connexion Laravel vers MySQL ne repond pas a temps."
+        dcompose logs --tail=120 app mysql || true
+        dcompose exec -T app sh -lc "tail -n 120 storage/logs/laravel.log" || true
         exit 1
     fi
     sleep 2
