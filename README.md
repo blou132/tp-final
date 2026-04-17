@@ -135,7 +135,7 @@ docker compose up -d --build
 
 ### Initialiser l'application
 ```bash
-docker compose exec app php artisan migrate --seed
+docker compose exec --user www-data app php artisan migrate --seed
 ```
 
 Application web: `http://localhost:8000`
@@ -147,8 +147,9 @@ Services:
 ### Depannage rapide (HTTP 500 "Please provide a valid cache path")
 ```bash
 ./start.sh
-sudo docker compose exec -T app php artisan optimize:clear || true
+sudo docker compose exec -T --user www-data app php artisan optimize:clear || true
 sudo docker compose restart app nginx
+sudo docker compose exec -T app php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $k=$app->make("Illuminate\\Contracts\\Console\\Kernel"); $k->bootstrap(); var_dump(config("view.compiled"));'
 ```
 
 ## 10. Tests

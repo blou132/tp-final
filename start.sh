@@ -27,6 +27,10 @@ dcompose() {
     "${DOCKER_CMD[@]}" compose "$@"
 }
 
+lartisan() {
+    dcompose exec -T --user www-data app php artisan "$@"
+}
+
 if ! dcompose version >/dev/null 2>&1; then
     echo "Docker Compose (v2) n'est pas disponible."
     exit 1
@@ -60,12 +64,17 @@ upsert_env "MONGODB_DATABASE" "tp_final_logs"
 upsert_env "MONGODB_USERNAME" "root"
 upsert_env "MONGODB_PASSWORD" "root"
 upsert_env "MONGODB_AUTH_DATABASE" "admin"
-upsert_env "VIEW_COMPILED_PATH" "/var/www/html/storage/framework/views"
 upsert_env "SESSION_DRIVER" "file"
 upsert_env "CACHE_STORE" "file"
 
 if ! grep -q '^APP_KEY=base64:' .env; then
-    APP_KEY_VALUE="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+    if command -v php >/dev/null 2>&1; then
+        APP_KEY_VALUE="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+    elif command -v openssl >/dev/null 2>&1; then
+        APP_KEY_VALUE="base64:$(openssl rand -base64 32 | tr -d '\n')"
+    else
+        APP_KEY_VALUE="base64:$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
+    fi
     upsert_env "APP_KEY" "$APP_KEY_VALUE"
 fi
 
@@ -80,21 +89,16 @@ fi
 
 dcompose exec -T app sh -lc "mkdir -p \
 storage/framework/cache \
+storage/framework/cache/data \
 storage/framework/sessions \
 storage/framework/views \
 storage/logs \
 bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache"
 
-VIEW_COMPILED_PATH_IN_CONTAINER="$(
-    dcompose exec -T app php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $kernel=$app->make("Illuminate\\Contracts\\Console\\Kernel"); $kernel->bootstrap(); $path=(string) config("view.compiled"); if (trim($path) === "") { fwrite(STDERR, "view.compiled is empty\n"); exit(1); } echo $path;'
-)"
-
-dcompose exec -T app sh -lc "mkdir -p \"$VIEW_COMPILED_PATH_IN_CONTAINER\" && chown -R www-data:www-data \"$VIEW_COMPILED_PATH_IN_CONTAINER\""
-
 echo "Attente de la base de donnees..."
 MAX_RETRIES=25
 COUNTER=0
-until dcompose exec -T app php artisan migrate:status >/dev/null 2>&1; do
+until lartisan migrate:status >/dev/null 2>&1; do
     COUNTER=$((COUNTER + 1))
     if [ "$COUNTER" -ge "$MAX_RETRIES" ]; then
         echo "La base de donnees ne repond pas a temps."
@@ -103,18 +107,21 @@ until dcompose exec -T app php artisan migrate:status >/dev/null 2>&1; do
     sleep 2
 done
 
-dcompose exec -T app php artisan migrate --seed --force
-dcompose exec -T app php artisan config:clear
-dcompose exec -T app php artisan route:clear
-dcompose exec -T app php artisan cache:clear
-dcompose exec -T app php artisan event:clear
-dcompose exec -T app php artisan view:clear || true
+lartisan migrate --seed --force
+lartisan config:clear
+lartisan route:clear
+lartisan cache:clear
+lartisan event:clear
+lartisan view:clear || true
 
 if command -v curl >/dev/null 2>&1; then
-    if ! curl -fsS http://localhost:8000 >/dev/null 2>&1; then
+    HTTP_CODE="$(curl -s -o /tmp/tp-final-start-response.html -w '%{http_code}' http://localhost:8000 || true)"
+    if [ -z "$HTTP_CODE" ] || [ "$HTTP_CODE" -ge 400 ]; then
         echo "La page http://localhost:8000 ne repond pas encore."
+        echo "HTTP code: ${HTTP_CODE:-unknown}"
         echo "Logs utiles:"
         dcompose logs --tail=80 nginx app || true
+        dcompose exec -T app sh -lc "tail -n 120 storage/logs/laravel.log" || true
         exit 1
     fi
 fi
