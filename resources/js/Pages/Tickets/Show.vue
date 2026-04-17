@@ -1,5 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import SectionCard from '@/Components/SectionCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
@@ -10,14 +12,17 @@ const props = defineProps({
     },
 });
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const formatDate = (value) => {
     if (!value) {
         return '-';
     }
 
-    return new Date(value).toLocaleString();
+    return new Intl.DateTimeFormat(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(value));
 };
 </script>
 
@@ -26,49 +31,59 @@ const formatDate = (value) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-slate-800">{{ t('tickets.show') }}</h2>
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="page-title">{{ t('tickets.show') }}</h2>
+                    <p class="page-subtitle">#{{ ticket.id }} • {{ ticket.user?.email ?? '-' }}</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <Link :href="route('tickets.edit', ticket.id)" class="btn-secondary">{{ t('common.edit') }}</Link>
+                    <Link :href="route('tickets.index')" class="btn-ghost">{{ t('common.back') }}</Link>
+                </div>
+            </div>
         </template>
 
-        <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <dl class="grid gap-4 text-sm text-slate-700 md:grid-cols-2">
-                <div>
-                    <dt class="font-semibold">{{ t('common.title') }}</dt>
-                    <dd>{{ ticket.title }}</dd>
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <SectionCard :title="ticket.title" :description="t('tickets.show_subtitle')">
+                <div class="mb-5 flex flex-wrap items-center gap-2">
+                    <StatusBadge :status="ticket.status" />
+                    <span
+                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                        :class="
+                            ticket.is_flagged
+                                ? 'bg-amber-50 text-amber-700 ring-amber-200'
+                                : 'bg-slate-100 text-slate-600 ring-slate-200'
+                        "
+                    >
+                        {{ t('common.flagged') }}: {{ ticket.is_flagged ? t('common.yes') : t('common.no') }}
+                    </span>
                 </div>
-                <div>
-                    <dt class="font-semibold">{{ t('common.status') }}</dt>
-                    <dd>{{ t(`status.${ticket.status}`, ticket.status) }}</dd>
-                </div>
-                <div class="md:col-span-2">
-                    <dt class="font-semibold">{{ t('common.description') }}</dt>
-                    <dd class="whitespace-pre-wrap">{{ ticket.description }}</dd>
-                </div>
-                <div>
-                    <dt class="font-semibold">{{ t('common.owner') }}</dt>
-                    <dd>{{ ticket.user?.email ?? '-' }}</dd>
-                </div>
-                <div>
-                    <dt class="font-semibold">{{ t('common.flagged') }}</dt>
-                    <dd>{{ ticket.is_flagged ? 'Yes' : 'No' }}</dd>
-                </div>
-                <div>
-                    <dt class="font-semibold">{{ t('common.created_at') }}</dt>
-                    <dd>{{ formatDate(ticket.created_at) }}</dd>
-                </div>
-                <div>
-                    <dt class="font-semibold">{{ t('common.updated_at') }}</dt>
-                    <dd>{{ formatDate(ticket.updated_at) }}</dd>
-                </div>
-            </dl>
 
-            <div class="mt-6 flex items-center gap-3">
-                <Link :href="route('tickets.edit', ticket.id)" class="text-blue-700 underline">
-                    {{ t('common.edit') }}
-                </Link>
-                <Link :href="route('tickets.index')" class="text-slate-600 underline">
-                    {{ t('common.back') }}
-                </Link>
-            </div>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                    <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{{ ticket.description }}</p>
+                </div>
+            </SectionCard>
+
+            <SectionCard :title="t('common.details')" :description="t('tickets.meta_hint')">
+                <dl class="space-y-4 text-sm">
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.owner') }}</dt>
+                        <dd class="mt-1 text-slate-800">{{ ticket.user?.email ?? '-' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.created_at') }}</dt>
+                        <dd class="mt-1 text-slate-800">{{ formatDate(ticket.created_at) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.updated_at') }}</dt>
+                        <dd class="mt-1 text-slate-800">{{ formatDate(ticket.updated_at) }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">ID</dt>
+                        <dd class="mono mt-1 text-slate-700">#{{ ticket.id }}</dd>
+                    </div>
+                </dl>
+            </SectionCard>
         </div>
     </AuthenticatedLayout>
 </template>

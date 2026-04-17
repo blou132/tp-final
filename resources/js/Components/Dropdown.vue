@@ -16,8 +16,10 @@ const props = defineProps({
     },
 });
 
-const closeOnEscape = (e) => {
-    if (open.value && e.key === 'Escape') {
+const open = ref(false);
+
+const closeOnEscape = (event) => {
+    if (open.value && event.key === 'Escape') {
         open.value = false;
     }
 };
@@ -34,14 +36,14 @@ const widthClass = computed(() => {
 const alignmentClasses = computed(() => {
     if (props.align === 'left') {
         return 'ltr:origin-top-left rtl:origin-top-right start-0';
-    } else if (props.align === 'right') {
-        return 'ltr:origin-top-right rtl:origin-top-left end-0';
-    } else {
-        return 'origin-top';
     }
-});
 
-const open = ref(false);
+    if (props.align === 'right') {
+        return 'ltr:origin-top-right rtl:origin-top-left end-0';
+    }
+
+    return 'origin-top';
+});
 </script>
 
 <template>
@@ -50,12 +52,7 @@ const open = ref(false);
             <slot name="trigger" />
         </div>
 
-        <!-- Full Screen Dropdown Overlay -->
-        <div
-            v-show="open"
-            class="fixed inset-0 z-40"
-            @click="open = false"
-        ></div>
+        <div v-show="open" class="fixed inset-0 z-40" @click="open = false" />
 
         <Transition
             enter-active-class="transition ease-out duration-200"
@@ -67,15 +64,12 @@ const open = ref(false);
         >
             <div
                 v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
+                class="absolute z-50 mt-2 rounded-xl shadow-lg"
                 :class="[widthClass, alignmentClasses]"
                 style="display: none"
                 @click="open = false"
             >
-                <div
-                    class="rounded-md ring-1 ring-black ring-opacity-5"
-                    :class="contentClasses"
-                >
+                <div class="overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-xl" :class="contentClasses">
                     <slot name="content" />
                 </div>
             </div>

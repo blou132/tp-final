@@ -38,6 +38,20 @@ class DashboardController extends Controller
                 'title' => $ticket->title,
                 'status' => $ticket->getRawOriginal('status'),
                 'user' => $ticket->user?->email,
+                'created_at' => $ticket->created_at?->toIso8601String(),
+            ]);
+
+        $recentPayments = (clone $paymentQuery)
+            ->with('user:id,name,email')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn (Payment $payment): array => [
+                'id' => $payment->id,
+                'amount' => (string) $payment->amount,
+                'status' => $payment->getRawOriginal('status'),
+                'user' => $payment->user?->email,
+                'created_at' => $payment->created_at?->toIso8601String(),
             ]);
 
         return Inertia::render('Dashboard', [
@@ -59,6 +73,11 @@ class DashboardController extends Controller
                 ],
             ],
             'recentTickets' => $recentTickets,
+            'recentPayments' => $recentPayments,
+            'can' => [
+                'create_ticket' => $request->user()->can('create', Ticket::class),
+                'create_payment' => $request->user()->can('create', Payment::class),
+            ],
         ]);
     }
 

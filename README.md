@@ -36,6 +36,11 @@ Statuts:
 
 ## 4. Fonctionnalités implémentées
 - Authentification (Breeze/Inertia).
+- Interface SaaS métier refondue:
+  - App shell professionnel (sidebar + topbar),
+  - dashboard KPI moderne,
+  - tables Tickets/Paiements avec filtres, recherche locale, tri et confirmations,
+  - formulaires CRUD structurés + feedbacks visuels.
 - Dashboard avec statistiques Tickets/Paiements.
 - CRUD Tickets (web) avec filtres.
 - CRUD Payments (web) avec filtres.

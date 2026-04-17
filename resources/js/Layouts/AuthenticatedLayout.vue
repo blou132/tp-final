@@ -3,200 +3,330 @@ import { computed, ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
 const page = usePage();
-const showingNavigationDropdown = ref(false);
-const { t, locale } = useI18n();
+const mobileSidebarOpen = ref(false);
+const { t, locale, supportedLocales } = useI18n();
 
 const flashSuccess = computed(() => page.props.flash?.success ?? null);
+const flashError = computed(() => page.props.flash?.error ?? null);
+
+const pageTitleMap = {
+    dashboard: 'nav.dashboard',
+    tickets: 'nav.tickets',
+    payments: 'nav.payments',
+    profile: 'nav.profile',
+};
+
+const currentPageTitle = computed(() => {
+    if (route().current('dashboard')) {
+        return t(pageTitleMap.dashboard);
+    }
+
+    if (route().current('tickets.*')) {
+        return t(pageTitleMap.tickets);
+    }
+
+    if (route().current('payments.*')) {
+        return t(pageTitleMap.payments);
+    }
+
+    if (route().current('profile.*')) {
+        return t(pageTitleMap.profile);
+    }
+
+    return t('app_name');
+});
+
+const roleLabel = computed(() => {
+    const roles = page.props.auth?.roles ?? [];
+
+    if (roles.includes('admin')) {
+        return 'admin';
+    }
+
+    if (roles.includes('user')) {
+        return 'user';
+    }
+
+    return '-';
+});
+
+const todayLabel = computed(() =>
+    new Intl.DateTimeFormat(locale.value === 'fr' ? 'fr-FR' : 'en-US', {
+        dateStyle: 'medium',
+    }).format(new Date()),
+);
+
+const navItems = [
+    {
+        key: 'dashboard',
+        routeName: 'dashboard',
+        current: 'dashboard',
+        icon: 'M3 12.5 12 4l9 8.5v7a1.5 1.5 0 0 1-1.5 1.5h-5.5V14h-4v7H4.5A1.5 1.5 0 0 1 3 19.5z',
+    },
+    {
+        key: 'tickets',
+        routeName: 'tickets.index',
+        current: 'tickets.*',
+        icon: 'M4 7.5h16M4 12h10M4 16.5h8M3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13A1.5 1.5 0 0 1 3.5 4z',
+    },
+    {
+        key: 'payments',
+        routeName: 'payments.index',
+        current: 'payments.*',
+        icon: 'M4 7h16M4 12h16M4 17h8M3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13A1.5 1.5 0 0 1 3.5 4z',
+    },
+];
+
+const closeMobileSidebar = () => {
+    mobileSidebarOpen.value = false;
+};
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-slate-100">
-            <nav class="border-b border-slate-200 bg-white">
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo class="block h-9 w-auto fill-current text-slate-800" />
-                                </Link>
-                            </div>
+    <div class="app-shell">
+        <div class="min-h-screen md:grid md:grid-cols-[272px_minmax(0,1fr)]">
+            <aside class="hidden border-r border-slate-200/80 bg-white/85 px-4 py-6 backdrop-blur md:flex md:flex-col">
+                <Link
+                    :href="route('dashboard')"
+                    class="flex items-center gap-3 rounded-2xl px-2 py-2 transition hover:bg-slate-100/70"
+                >
+                    <ApplicationLogo class="h-9 w-9 fill-current text-slate-800" />
+                    <div>
+                        <p class="text-sm font-bold tracking-tight text-slate-900">{{ t('app_name') }}</p>
+                        <p class="text-xs text-slate-500">Support Workspace</p>
+                    </div>
+                </Link>
 
-                            <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    {{ t('nav.dashboard') }}
-                                </NavLink>
-                                <NavLink :href="route('tickets.index')" :active="route().current('tickets.*')">
-                                    {{ t('nav.tickets') }}
-                                </NavLink>
-                                <NavLink :href="route('payments.index')" :active="route().current('payments.*')">
-                                    {{ t('nav.payments') }}
-                                </NavLink>
-                            </div>
-                        </div>
+                <div class="mt-6 rounded-xl border border-slate-200/80 bg-slate-50/85 px-3 py-2 text-xs text-slate-600">
+                    <span class="font-semibold uppercase tracking-wide text-slate-500">Role</span>
+                    <span class="mono ml-2 rounded bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
+                        {{ roleLabel }}
+                    </span>
+                </div>
 
-                        <div class="hidden sm:flex sm:items-center sm:gap-3">
-                            <div class="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600">
-                                <Link
-                                    :href="route('locale.switch', 'fr')"
-                                    :class="[
-                                        'rounded px-2 py-1',
-                                        locale === 'fr' ? 'bg-slate-900 text-white' : 'hover:bg-slate-100',
-                                    ]"
-                                >
-                                    FR
-                                </Link>
-                                <Link
-                                    :href="route('locale.switch', 'en')"
-                                    :class="[
-                                        'rounded px-2 py-1',
-                                        locale === 'en' ? 'bg-slate-900 text-white' : 'hover:bg-slate-100',
-                                    ]"
-                                >
-                                    EN
-                                </Link>
-                            </div>
+                <nav class="mt-6 space-y-1.5">
+                    <Link
+                        v-for="item in navItems"
+                        :key="item.key"
+                        :href="route(item.routeName)"
+                        :class="[
+                            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                            route().current(item.current)
+                                ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                        ]"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path :d="item.icon" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        {{ t(`nav.${item.key}`) }}
+                    </Link>
+                </nav>
 
-                            <div class="relative ms-3">
-                                <Dropdown align="right" width="48">
-                                    <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-slate-600 transition duration-150 ease-in-out hover:text-slate-800 focus:outline-none"
-                                            >
-                                                {{ $page.props.auth.user.name }}
+                <div class="mt-auto rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.productivity') }}</p>
+                    <p class="mt-2 text-sm font-medium text-slate-800">{{ t('common.manage_flow') }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ t('common.manage_flow_hint') }}</p>
+                </div>
+            </aside>
 
-                                                <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </template>
-
-                                    <template #content>
-                                        <DropdownLink :href="route('profile.edit')">
-                                            {{ t('nav.profile') }}
-                                        </DropdownLink>
-                                        <DropdownLink :href="route('logout')" method="post" as="button">
-                                            {{ t('nav.logout') }}
-                                        </DropdownLink>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div class="-me-2 flex items-center sm:hidden">
+            <div class="relative flex min-h-screen flex-col">
+                <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/88 backdrop-blur">
+                    <div class="mx-auto flex h-16 w-full max-w-[1480px] items-center justify-between px-4 sm:px-8">
+                        <div class="flex items-center gap-3">
                             <button
-                                @click="showingNavigationDropdown = !showingNavigationDropdown"
-                                class="inline-flex items-center justify-center rounded-md p-2 text-slate-400 transition duration-150 ease-in-out hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 focus:outline-none"
+                                type="button"
+                                class="btn-ghost md:hidden"
+                                @click="mobileSidebarOpen = true"
+                                :aria-label="t('common.menu')"
                             >
-                                <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex': !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex': showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
                                 </svg>
                             </button>
+
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ t('common.workspace') }}</p>
+                                <h1 class="text-base font-semibold text-slate-900">{{ currentPageTitle }}</h1>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <div class="metric-chip hidden lg:inline-flex">
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                {{ todayLabel }}
+                            </div>
+
+                            <div class="hidden items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:flex">
+                                <Link
+                                    v-for="localeCode in supportedLocales"
+                                    :key="localeCode"
+                                    :href="route('locale.switch', localeCode)"
+                                    :class="[
+                                        'rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition',
+                                        locale === localeCode
+                                            ? 'bg-slate-900 text-white'
+                                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                                    ]"
+                                >
+                                    {{ localeCode }}
+                                </Link>
+                            </div>
+
+                            <Dropdown align="right" width="48">
+                                <template #trigger>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+                                    >
+                                        <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+                                            {{ $page.props.auth.user.name.slice(0, 1).toUpperCase() }}
+                                        </span>
+                                        <span class="hidden sm:inline">{{ $page.props.auth.user.name }}</span>
+                                        <svg class="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                fill-rule="evenodd"
+                                                d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.112l3.71-3.88a.75.75 0 0 1 1.08 1.04l-4.25 4.445a.75.75 0 0 1-1.08 0L5.21 8.273a.75.75 0 0 1 .02-1.06Z"
+                                                clip-rule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </template>
+
+                                <template #content>
+                                    <DropdownLink :href="route('profile.edit')">{{ t('nav.profile') }}</DropdownLink>
+                                    <DropdownLink :href="route('logout')" method="post" as="button">{{ t('nav.logout') }}</DropdownLink>
+                                </template>
+                            </Dropdown>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="border-b border-slate-200/70 bg-white/55">
+                    <div class="mx-auto flex w-full max-w-[1480px] flex-wrap items-center gap-2 px-4 py-2 sm:px-8">
+                        <span class="tiny-muted">{{ t('common.quick_access') }}</span>
+                        <Link :href="route('tickets.index', { status: 'open' })" class="metric-chip hover:bg-slate-50">
+                            {{ t('status.open') }}
+                        </Link>
+                        <Link :href="route('tickets.index', { status: 'in_progress' })" class="metric-chip hover:bg-slate-50">
+                            {{ t('status.in_progress') }}
+                        </Link>
+                        <Link :href="route('payments.index', { status: 'pending' })" class="metric-chip hover:bg-slate-50">
+                            {{ t('status.pending') }}
+                        </Link>
+                        <Link :href="route('payments.index', { status: 'failed' })" class="metric-chip hover:bg-slate-50">
+                            {{ t('status.failed') }}
+                        </Link>
+                    </div>
+                </div>
+
+                <div v-if="flashSuccess || flashError" class="mx-auto w-full max-w-[1480px] px-4 pt-4 sm:px-8">
+                    <div class="relative">
+                        <div
+                            v-if="flashSuccess"
+                            class="mb-3 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                        >
+                            <svg class="mt-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="m5 13 4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <span>{{ flashSuccess }}</span>
+                        </div>
+
+                        <div
+                            v-if="flashError"
+                            class="mb-3 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+                        >
+                            <svg class="mt-0.5 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 8v5M12 16h.01" stroke-linecap="round" />
+                            </svg>
+                            <span>{{ flashError }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }" class="sm:hidden">
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            {{ t('nav.dashboard') }}
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('tickets.index')" :active="route().current('tickets.*')">
-                            {{ t('nav.tickets') }}
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('payments.index')" :active="route().current('payments.*')">
-                            {{ t('nav.payments') }}
-                        </ResponsiveNavLink>
+                <main class="flex-1">
+                    <div class="mx-auto w-full max-w-[1480px] px-4 pb-8 pt-6 sm:px-8 sm:pt-8">
+                        <div v-if="$slots.header" class="mb-6">
+                            <slot name="header" />
+                        </div>
+
+                        <slot />
                     </div>
-
-                    <div class="border-t border-slate-200 pb-1 pt-4">
-                        <div class="px-4">
-                            <div class="text-base font-medium text-slate-800">{{ $page.props.auth.user.name }}</div>
-                            <div class="text-sm font-medium text-slate-500">{{ $page.props.auth.user.email }}</div>
-                        </div>
-
-                        <div class="mt-3 flex gap-2 px-4">
-                            <Link
-                                :href="route('locale.switch', 'fr')"
-                                class="rounded border px-2 py-1 text-xs"
-                                :class="locale === 'fr' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700'"
-                            >
-                                FR
-                            </Link>
-                            <Link
-                                :href="route('locale.switch', 'en')"
-                                class="rounded border px-2 py-1 text-xs"
-                                :class="locale === 'en' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700'"
-                            >
-                                EN
-                            </Link>
-                        </div>
-
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')">
-                                {{ t('nav.profile') }}
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('logout')" method="post" as="button">
-                                {{ t('nav.logout') }}
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <header class="bg-white shadow" v-if="$slots.header">
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
-                </div>
-            </header>
-
-            <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                <div
-                    v-if="flashSuccess"
-                    class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-                >
-                    {{ flashSuccess }}
-                </div>
-
-                <slot />
-            </main>
+                </main>
+            </div>
         </div>
+
+        <Transition
+            enter-active-class="duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="mobileSidebarOpen" class="fixed inset-0 z-40 bg-slate-900/45 md:hidden" @click="closeMobileSidebar" />
+        </Transition>
+
+        <Transition
+            enter-active-class="duration-200 ease-out"
+            enter-from-class="-translate-x-full"
+            enter-to-class="translate-x-0"
+            leave-active-class="duration-150 ease-in"
+            leave-from-class="translate-x-0"
+            leave-to-class="-translate-x-full"
+        >
+            <aside
+                v-if="mobileSidebarOpen"
+                class="fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white p-4 shadow-2xl md:hidden"
+            >
+                <div class="mb-4 flex items-center justify-between">
+                    <Link :href="route('dashboard')" class="flex items-center gap-2" @click="closeMobileSidebar">
+                        <ApplicationLogo class="h-8 w-8 fill-current text-slate-800" />
+                        <span class="text-sm font-bold text-slate-900">{{ t('app_name') }}</span>
+                    </Link>
+                    <button type="button" class="btn-ghost" @click="closeMobileSidebar">✕</button>
+                </div>
+
+                <nav class="space-y-1.5">
+                    <Link
+                        v-for="item in navItems"
+                        :key="item.key"
+                        :href="route(item.routeName)"
+                        @click="closeMobileSidebar"
+                        :class="[
+                            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
+                            route().current(item.current)
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                        ]"
+                    >
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path :d="item.icon" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        {{ t(`nav.${item.key}`) }}
+                    </Link>
+                </nav>
+
+                <div class="mt-4 flex gap-2">
+                    <Link
+                        v-for="localeCode in supportedLocales"
+                        :key="localeCode"
+                        :href="route('locale.switch', localeCode)"
+                        @click="closeMobileSidebar"
+                        :class="[
+                            'rounded-lg px-3 py-1.5 text-xs font-semibold uppercase',
+                            locale === localeCode ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700',
+                        ]"
+                    >
+                        {{ localeCode }}
+                    </Link>
+                </div>
+            </aside>
+        </Transition>
     </div>
 </template>
