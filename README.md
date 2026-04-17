@@ -115,6 +115,11 @@ Application web: `http://127.0.0.1:8000`
 - User: `user@example.com` / `password`
 
 ## 9. Installation Docker
+### Commande unique (recommandee)
+```bash
+./start.sh
+```
+
 ### Lancer les conteneurs
 ```bash
 docker compose up -d --build
