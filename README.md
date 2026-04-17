@@ -115,6 +115,11 @@ Application web: `http://127.0.0.1:8000`
 - User: `user@example.com` / `password`
 
 ## 9. Installation Docker
+### Poste vierge (Docker non installe)
+```bash
+./bootstrap.sh
+```
+
 ### Commande unique (recommandee)
 ```bash
 ./start.sh
