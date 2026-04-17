@@ -31,6 +31,30 @@ lartisan() {
     dcompose exec -T --user www-data app php artisan "$@"
 }
 
+open_browser() {
+    local url="$1"
+
+    if [ -n "${CI:-}" ]; then
+        return
+    fi
+
+    if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+        echo "Session graphique non detectee. Ouvre manuellement: ${url}"
+        return
+    fi
+
+    if ! command -v xdg-open >/dev/null 2>&1; then
+        echo "xdg-open introuvable. Ouvre manuellement: ${url}"
+        return
+    fi
+
+    if xdg-open "${url}" >/dev/null 2>&1; then
+        echo "Navigateur ouvert: ${url}"
+    else
+        echo "Impossible d'ouvrir automatiquement le navigateur. Ouvre: ${url}"
+    fi
+}
+
 if ! dcompose version >/dev/null 2>&1; then
     echo "Docker Compose (v2) n'est pas disponible."
     exit 1
@@ -130,3 +154,5 @@ echo
 echo "Application prete : http://localhost:8000"
 echo "Admin : admin@example.com / password"
 echo "User  : user@example.com / password"
+
+open_browser "http://localhost:8000"
