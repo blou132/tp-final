@@ -128,6 +128,32 @@ const paidAmount = computed(() =>
         .filter((payment) => payment.status === 'paid')
         .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0),
 );
+const pendingAmount = computed(() =>
+    rows.value
+        .filter((payment) => payment.status === 'pending')
+        .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0),
+);
+const failedAmount = computed(() =>
+    rows.value
+        .filter((payment) => payment.status === 'failed')
+        .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0),
+);
+
+const averageAmount = computed(() => {
+    if (rows.value.length === 0) {
+        return 0;
+    }
+
+    return totalAmount.value / rows.value.length;
+});
+
+const collectionRate = computed(() => {
+    if (totalAmount.value <= 0) {
+        return 0;
+    }
+
+    return Math.round((paidAmount.value / totalAmount.value) * 100);
+});
 
 const statusBreakdown = computed(() => {
     const total = rows.value.length || 1;
@@ -142,6 +168,12 @@ const statusBreakdown = computed(() => {
         };
     });
 });
+
+const topPayments = computed(() =>
+    [...rows.value]
+        .sort((a, b) => Number(b.amount ?? 0) - Number(a.amount ?? 0))
+        .slice(0, 5),
+);
 
 const formatMoney = (value) => {
     const number = Number(value ?? 0);
@@ -162,6 +194,20 @@ const formatDate = (value) => {
         timeStyle: 'short',
     }).format(new Date(value));
 };
+
+const sizeBand = (payment) => {
+    const amount = Number(payment.amount ?? 0);
+
+    if (amount >= 1000) {
+        return t('payments.band_large');
+    }
+
+    if (amount >= 300) {
+        return t('payments.band_medium');
+    }
+
+    return t('payments.band_small');
+};
 </script>
 
 <template>
@@ -180,7 +226,7 @@ const formatDate = (value) => {
             </div>
         </template>
 
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-5">
             <SectionCard :title="t('payments.page_count')" :description="t('payments.page_count_hint')">
                 <p class="mono text-3xl font-bold text-slate-900">{{ rows.length }}</p>
             </SectionCard>
@@ -189,6 +235,12 @@ const formatDate = (value) => {
             </SectionCard>
             <SectionCard :title="t('payments.paid_amount')" :description="t('payments.paid_amount_hint')">
                 <p class="mono text-3xl font-bold text-emerald-700">{{ formatMoney(paidAmount) }} €</p>
+            </SectionCard>
+            <SectionCard :title="t('payments.pending_amount')" :description="t('payments.pending_amount_hint')">
+                <p class="mono text-3xl font-bold text-amber-700">{{ formatMoney(pendingAmount) }} €</p>
+            </SectionCard>
+            <SectionCard :title="t('payments.collection_rate')" :description="t('payments.collection_rate_hint')">
+                <p class="mono text-3xl font-bold text-slate-900">{{ collectionRate }}%</p>
             </SectionCard>
         </div>
 
@@ -205,16 +257,17 @@ const formatDate = (value) => {
             />
         </div>
 
-        <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
             <div>
                 <div class="table-shell reveal">
-                    <table class="min-w-[680px] w-full divide-y divide-slate-200/70">
+                    <table class="min-w-[860px] w-full divide-y divide-slate-200/70">
                         <thead class="table-head sticky top-0 z-10">
                             <tr>
                                 <th class="table-cell text-left">#</th>
                                 <th class="table-cell text-left">{{ t('common.amount') }}</th>
                                 <th class="table-cell text-left">{{ t('common.status') }}</th>
-                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.owner') }}</th>
+                                <th class="table-cell text-left hidden lg:table-cell">{{ t('payments.band_title') }}</th>
+                                <th class="table-cell text-left hidden 2xl:table-cell">{{ t('common.owner') }}</th>
                                 <th class="table-cell text-left hidden xl:table-cell">{{ t('common.created_at') }}</th>
                                 <th class="table-cell text-left">{{ t('common.actions') }}</th>
                             </tr>
@@ -225,7 +278,10 @@ const formatDate = (value) => {
                                 <td class="table-cell mono text-xs text-slate-500">#{{ payment.id }}</td>
                                 <td class="table-cell text-sm font-semibold text-slate-900">{{ formatMoney(payment.amount) }} €</td>
                                 <td class="table-cell"><StatusBadge :status="payment.status" /></td>
-                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ payment.user?.email ?? '-' }}</td>
+                                <td class="table-cell hidden lg:table-cell">
+                                    <span class="pill">{{ sizeBand(payment) }}</span>
+                                </td>
+                                <td class="table-cell text-slate-600 hidden 2xl:table-cell">{{ payment.user?.email ?? '-' }}</td>
                                 <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatDate(payment.created_at) }}</td>
                                 <td class="table-cell">
                                     <div class="flex flex-wrap gap-1">
@@ -243,7 +299,7 @@ const formatDate = (value) => {
                             </tr>
 
                             <tr v-if="rows.length === 0">
-                                <td colspan="6" class="p-6">
+                                <td colspan="7" class="p-6">
                                     <EmptyState :title="t('payments.empty')" :description="t('payments.empty_hint')">
                                         <template #actions>
                                             <Link v-if="can.create" :href="route('payments.create')" class="btn-primary">
@@ -290,6 +346,49 @@ const formatDate = (value) => {
                     </div>
                 </SectionCard>
 
+                <SectionCard :title="t('payments.finance_health_title')" :description="t('payments.finance_health_hint')">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('payments.failed_amount') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ formatMoney(failedAmount) }} €</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('payments.average_amount') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ formatMoney(averageAmount) }} €</span>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <div class="mb-1 flex items-center justify-between text-xs text-slate-600">
+                                <span>{{ t('payments.collection_rate') }}</span>
+                                <span class="mono">{{ collectionRate }}%</span>
+                            </div>
+                            <div class="h-1.5 rounded-full bg-slate-200">
+                                <div class="h-1.5 rounded-full bg-emerald-500" :style="{ width: `${collectionRate}%` }" />
+                            </div>
+                        </div>
+                    </div>
+                </SectionCard>
+
+                <SectionCard :title="t('payments.top_transactions_title')" :description="t('payments.top_transactions_hint')">
+                    <div v-if="topPayments.length === 0" class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 text-sm text-slate-500">
+                        {{ t('payments.top_transactions_empty') }}
+                    </div>
+                    <ul v-else class="space-y-2">
+                        <li
+                            v-for="payment in topPayments"
+                            :key="`top-${payment.id}`"
+                            class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2"
+                        >
+                            <div class="flex items-center justify-between gap-2">
+                                <Link :href="route('payments.show', payment.id)" class="text-sm font-semibold text-slate-900 hover:text-slate-700">
+                                    #{{ payment.id }} • {{ formatMoney(payment.amount) }} €
+                                </Link>
+                                <StatusBadge :status="payment.status" small />
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500">{{ payment.user?.email ?? '-' }}</p>
+                        </li>
+                    </ul>
+                </SectionCard>
+
                 <SectionCard :title="t('payments.quick_actions_title')" :description="t('payments.quick_actions_hint')">
                     <div class="grid gap-2">
                         <Link v-if="can.create" :href="route('payments.create')" class="btn-primary justify-center">
@@ -303,7 +402,19 @@ const formatDate = (value) => {
                             <span>{{ t('status.pending') }}</span>
                             <span class="mono">{{ statusBreakdown.find((item) => item.status === 'pending')?.count ?? 0 }}</span>
                         </Link>
+                        <Link :href="route('payments.index', { status: 'failed' })" class="btn-secondary justify-between">
+                            <span>{{ t('status.failed') }}</span>
+                            <span class="mono">{{ statusBreakdown.find((item) => item.status === 'failed')?.count ?? 0 }}</span>
+                        </Link>
                     </div>
+                </SectionCard>
+
+                <SectionCard :title="t('payments.recommendations_title')" :description="t('payments.recommendations_hint')">
+                    <ul class="space-y-2">
+                        <li class="insight-item">{{ t('payments.recommendation_1') }}</li>
+                        <li class="insight-item">{{ t('payments.recommendation_2') }}</li>
+                        <li class="insight-item">{{ t('payments.recommendation_3') }}</li>
+                    </ul>
                 </SectionCard>
             </div>
         </div>

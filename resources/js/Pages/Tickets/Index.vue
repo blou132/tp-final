@@ -123,6 +123,45 @@ const rows = computed(() => {
 });
 
 const flaggedCount = computed(() => rows.value.filter((ticket) => ticket.is_flagged).length);
+const openCount = computed(() => rows.value.filter((ticket) => ticket.status === 'open').length);
+const inProgressCount = computed(() => rows.value.filter((ticket) => ticket.status === 'in_progress').length);
+const closedCount = computed(() => rows.value.filter((ticket) => ticket.status === 'closed').length);
+
+const openRate = computed(() => {
+    if (rows.value.length === 0) {
+        return 0;
+    }
+
+    return Math.round((openCount.value / rows.value.length) * 100);
+});
+
+const closedRate = computed(() => {
+    if (rows.value.length === 0) {
+        return 0;
+    }
+
+    return Math.round((closedCount.value / rows.value.length) * 100);
+});
+
+const getAgeHours = (ticket) => {
+    if (!ticket?.created_at) {
+        return 0;
+    }
+
+    return Math.max(0, Math.floor((Date.now() - new Date(ticket.created_at).getTime()) / 36e5));
+};
+
+const staleCount = computed(() =>
+    rows.value.filter((ticket) => ['open', 'in_progress'].includes(ticket.status) && getAgeHours(ticket) >= 48).length,
+);
+
+const freshCount = computed(() =>
+    rows.value.filter((ticket) => ['open', 'in_progress'].includes(ticket.status) && getAgeHours(ticket) < 24).length,
+);
+
+const highImpactCount = computed(() =>
+    rows.value.filter((ticket) => ticket.is_flagged || getAgeHours(ticket) >= 72).length,
+);
 
 const statusBreakdown = computed(() => {
     const total = rows.value.length || 1;
@@ -138,6 +177,20 @@ const statusBreakdown = computed(() => {
     });
 });
 
+const topRequesters = computed(() => {
+    const map = new Map();
+
+    for (const ticket of rows.value) {
+        const owner = ticket.user?.email ?? '-';
+        map.set(owner, (map.get(owner) ?? 0) + 1);
+    }
+
+    return [...map.entries()]
+        .map(([owner, count]) => ({ owner, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+});
+
 const formatDate = (value) => {
     if (!value) {
         return '-';
@@ -149,12 +202,39 @@ const formatDate = (value) => {
     }).format(new Date(value));
 };
 
+const formatAge = (ticket) => {
+    const hours = getAgeHours(ticket);
+
+    if (hours < 24) {
+        return `${hours}h`;
+    }
+
+    const days = Math.floor(hours / 24);
+    const remaining = hours % 24;
+
+    return `${days}d ${remaining}h`;
+};
+
 const excerpt = (value) => {
     if (!value) {
         return '-';
     }
 
     return value.length > 90 ? `${value.slice(0, 90)}...` : value;
+};
+
+const priorityInfo = (ticket) => {
+    const ageHours = getAgeHours(ticket);
+
+    if (ticket.is_flagged || ageHours >= 72) {
+        return { label: t('tickets.priority_critical'), className: 'bg-rose-50 text-rose-700 ring-rose-200' };
+    }
+
+    if (ticket.status === 'open' && ageHours >= 36) {
+        return { label: t('tickets.priority_high'), className: 'bg-amber-50 text-amber-700 ring-amber-200' };
+    }
+
+    return { label: t('tickets.priority_normal'), className: 'bg-slate-100 text-slate-700 ring-slate-200' };
 };
 </script>
 
@@ -174,17 +254,21 @@ const excerpt = (value) => {
             </div>
         </template>
 
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 2xl:grid-cols-5">
             <SectionCard :title="t('tickets.page_count')" :description="t('tickets.page_count_hint')">
                 <p class="mono text-3xl font-bold text-slate-900">{{ rows.length }}</p>
             </SectionCard>
+            <SectionCard :title="t('tickets.open_rate')" :description="t('tickets.open_rate_hint')">
+                <p class="mono text-3xl font-bold text-slate-900">{{ openRate }}%</p>
+            </SectionCard>
+            <SectionCard :title="t('tickets.closed_rate')" :description="t('tickets.closed_rate_hint')">
+                <p class="mono text-3xl font-bold text-emerald-700">{{ closedRate }}%</p>
+            </SectionCard>
+            <SectionCard :title="t('tickets.stale_count')" :description="t('tickets.stale_count_hint')">
+                <p class="mono text-3xl font-bold text-amber-700">{{ staleCount }}</p>
+            </SectionCard>
             <SectionCard :title="t('common.flagged')" :description="t('tickets.flagged_hint')">
                 <p class="mono text-3xl font-bold text-slate-900">{{ flaggedCount }}</p>
-            </SectionCard>
-            <SectionCard :title="t('common.status')" :description="t('tickets.active_filter')">
-                <p class="text-sm font-semibold text-slate-700">
-                    {{ selectedStatus ? t(`status.${selectedStatus}`, selectedStatus) : t('common.all') }}
-                </p>
             </SectionCard>
         </div>
 
@@ -201,18 +285,18 @@ const excerpt = (value) => {
             />
         </div>
 
-        <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
             <div>
                 <div class="table-shell reveal">
-                    <table class="min-w-[720px] w-full divide-y divide-slate-200/70">
+                    <table class="min-w-[860px] w-full divide-y divide-slate-200/70">
                         <thead class="table-head sticky top-0 z-10">
                             <tr>
                                 <th class="table-cell text-left">#</th>
                                 <th class="table-cell text-left">{{ t('common.title') }}</th>
                                 <th class="table-cell text-left">{{ t('common.status') }}</th>
-                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.owner') }}</th>
-                                <th class="table-cell text-left hidden lg:table-cell">{{ t('common.flagged') }}</th>
-                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.created_at') }}</th>
+                                <th class="table-cell text-left hidden lg:table-cell">{{ t('tickets.priority') }}</th>
+                                <th class="table-cell text-left hidden 2xl:table-cell">{{ t('common.owner') }}</th>
+                                <th class="table-cell text-left hidden xl:table-cell">{{ t('common.age') }}</th>
                                 <th class="table-cell text-left">{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
@@ -225,22 +309,21 @@ const excerpt = (value) => {
                                         {{ ticket.title }}
                                     </Link>
                                     <p class="mt-1 text-xs text-slate-500">{{ excerpt(ticket.description) }}</p>
+                                    <p class="mt-1 text-xs text-slate-400 2xl:hidden">
+                                        {{ ticket.user?.email ?? '-' }} • {{ formatDate(ticket.created_at) }}
+                                    </p>
                                 </td>
                                 <td class="table-cell"><StatusBadge :status="ticket.status" /></td>
-                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ ticket.user?.email ?? '-' }}</td>
                                 <td class="table-cell hidden lg:table-cell">
                                     <span
                                         class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
-                                        :class="
-                                            ticket.is_flagged
-                                                ? 'bg-amber-50 text-amber-700 ring-amber-200'
-                                                : 'bg-slate-100 text-slate-600 ring-slate-200'
-                                        "
+                                        :class="priorityInfo(ticket).className"
                                     >
-                                        {{ ticket.is_flagged ? t('common.yes') : t('common.no') }}
+                                        {{ priorityInfo(ticket).label }}
                                     </span>
                                 </td>
-                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatDate(ticket.created_at) }}</td>
+                                <td class="table-cell text-slate-600 hidden 2xl:table-cell">{{ ticket.user?.email ?? '-' }}</td>
+                                <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatAge(ticket) }}</td>
                                 <td class="table-cell">
                                     <div class="flex flex-wrap gap-1">
                                         <Link :href="route('tickets.show', ticket.id)" class="btn-ghost">{{ t('common.details') }}</Link>
@@ -304,6 +387,39 @@ const excerpt = (value) => {
                     </div>
                 </SectionCard>
 
+                <SectionCard :title="t('tickets.aging_title')" :description="t('tickets.aging_hint')">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('tickets.fresh_count') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ freshCount }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('tickets.stale_count') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ staleCount }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('tickets.high_impact') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ highImpactCount }}</span>
+                        </div>
+                    </div>
+                </SectionCard>
+
+                <SectionCard :title="t('tickets.top_requesters_title')" :description="t('tickets.top_requesters_hint')">
+                    <div v-if="topRequesters.length === 0" class="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 text-sm text-slate-500">
+                        {{ t('tickets.top_requesters_empty') }}
+                    </div>
+                    <div v-else class="space-y-2">
+                        <div
+                            v-for="item in topRequesters"
+                            :key="item.owner"
+                            class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2"
+                        >
+                            <span class="truncate text-sm text-slate-700">{{ item.owner }}</span>
+                            <span class="mono text-xs text-slate-500">{{ item.count }}</span>
+                        </div>
+                    </div>
+                </SectionCard>
+
                 <SectionCard :title="t('tickets.quick_actions_title')" :description="t('tickets.quick_actions_hint')">
                     <div class="grid gap-2">
                         <Link v-if="can.create" :href="route('tickets.create')" class="btn-primary justify-center">
@@ -315,7 +431,11 @@ const excerpt = (value) => {
                         </Link>
                         <Link :href="route('tickets.index', { status: 'open' })" class="btn-secondary justify-between">
                             <span>{{ t('status.open') }}</span>
-                            <span class="mono">{{ statusBreakdown.find((item) => item.status === 'open')?.count ?? 0 }}</span>
+                            <span class="mono">{{ openCount }}</span>
+                        </Link>
+                        <Link :href="route('tickets.index', { status: 'in_progress' })" class="btn-secondary justify-between">
+                            <span>{{ t('status.in_progress') }}</span>
+                            <span class="mono">{{ inProgressCount }}</span>
                         </Link>
                     </div>
                 </SectionCard>

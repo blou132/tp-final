@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import SectionCard from '@/Components/SectionCard.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
@@ -24,6 +25,76 @@ const formatDate = (value) => {
         timeStyle: 'short',
     }).format(new Date(value));
 };
+
+const ageHours = computed(() => {
+    if (!props.ticket?.created_at) {
+        return 0;
+    }
+
+    return Math.max(0, Math.floor((Date.now() - new Date(props.ticket.created_at).getTime()) / 36e5));
+});
+
+const ageLabel = computed(() => {
+    if (ageHours.value < 24) {
+        return `${ageHours.value}h`;
+    }
+
+    const days = Math.floor(ageHours.value / 24);
+    const hours = ageHours.value % 24;
+
+    return `${days}d ${hours}h`;
+});
+
+const priority = computed(() => {
+    if (props.ticket.is_flagged || ageHours.value >= 72) {
+        return {
+            label: t('tickets.priority_critical'),
+            className: 'bg-rose-50 text-rose-700 ring-rose-200',
+            note: t('tickets.priority_critical_note'),
+        };
+    }
+
+    if (props.ticket.status === 'open' && ageHours.value >= 36) {
+        return {
+            label: t('tickets.priority_high'),
+            className: 'bg-amber-50 text-amber-700 ring-amber-200',
+            note: t('tickets.priority_high_note'),
+        };
+    }
+
+    return {
+        label: t('tickets.priority_normal'),
+        className: 'bg-slate-100 text-slate-700 ring-slate-200',
+        note: t('tickets.priority_normal_note'),
+    };
+});
+
+const nextAction = computed(() => {
+    if (props.ticket.status === 'open') {
+        return t('tickets.next_action_open');
+    }
+
+    if (props.ticket.status === 'in_progress') {
+        return t('tickets.next_action_in_progress');
+    }
+
+    return t('tickets.next_action_closed');
+});
+
+const timelineItems = computed(() => [
+    {
+        label: t('tickets.timeline_created'),
+        value: formatDate(props.ticket.created_at),
+    },
+    {
+        label: t('tickets.timeline_updated'),
+        value: formatDate(props.ticket.updated_at),
+    },
+    {
+        label: t('tickets.timeline_age'),
+        value: ageLabel.value,
+    },
+]);
 </script>
 
 <template>
@@ -43,47 +114,93 @@ const formatDate = (value) => {
             </div>
         </template>
 
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <SectionCard :title="ticket.title" :description="t('tickets.show_subtitle')">
-                <div class="mb-5 flex flex-wrap items-center gap-2">
-                    <StatusBadge :status="ticket.status" />
-                    <span
-                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
-                        :class="
-                            ticket.is_flagged
-                                ? 'bg-amber-50 text-amber-700 ring-amber-200'
-                                : 'bg-slate-100 text-slate-600 ring-slate-200'
-                        "
-                    >
-                        {{ t('common.flagged') }}: {{ ticket.is_flagged ? t('common.yes') : t('common.no') }}
-                    </span>
-                </div>
+        <div class="grid gap-4 2xl:grid-cols-[minmax(0,1.55fr)_340px]">
+            <div class="space-y-4">
+                <SectionCard :title="ticket.title" :description="t('tickets.show_subtitle')">
+                    <div class="mb-5 flex flex-wrap items-center gap-2">
+                        <StatusBadge :status="ticket.status" />
+                        <span
+                            class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                            :class="priority.className"
+                        >
+                            {{ t('tickets.priority') }}: {{ priority.label }}
+                        </span>
+                        <span
+                            class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
+                            :class="
+                                ticket.is_flagged
+                                    ? 'bg-amber-50 text-amber-700 ring-amber-200'
+                                    : 'bg-slate-100 text-slate-600 ring-slate-200'
+                            "
+                        >
+                            {{ t('common.flagged') }}: {{ ticket.is_flagged ? t('common.yes') : t('common.no') }}
+                        </span>
+                    </div>
 
-                <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                    <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{{ ticket.description }}</p>
-                </div>
-            </SectionCard>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                        <p class="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{{ ticket.description }}</p>
+                    </div>
+                </SectionCard>
 
-            <SectionCard :title="t('common.details')" :description="t('tickets.meta_hint')">
-                <dl class="space-y-4 text-sm">
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.owner') }}</dt>
-                        <dd class="mt-1 text-slate-800">{{ ticket.user?.email ?? '-' }}</dd>
+                <SectionCard :title="t('tickets.timeline_title')" :description="t('tickets.timeline_hint')">
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div v-for="item in timelineItems" :key="item.label" class="surface-card-soft px-3 py-3">
+                            <p class="tiny-muted">{{ item.label }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-800">{{ item.value }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.created_at') }}</dt>
-                        <dd class="mt-1 text-slate-800">{{ formatDate(ticket.created_at) }}</dd>
+                </SectionCard>
+
+                <SectionCard :title="t('tickets.operational_summary_title')" :description="t('tickets.operational_summary_hint')">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div class="insight-item">
+                            <p class="tiny-muted">{{ t('tickets.priority') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ priority.label }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ priority.note }}</p>
+                        </div>
+                        <div class="insight-item">
+                            <p class="tiny-muted">{{ t('tickets.next_action_title') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ nextAction }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ t('tickets.next_action_hint') }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.updated_at') }}</dt>
-                        <dd class="mt-1 text-slate-800">{{ formatDate(ticket.updated_at) }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.id') }}</dt>
-                        <dd class="mono mt-1 text-slate-700">#{{ ticket.id }}</dd>
-                    </div>
-                </dl>
-            </SectionCard>
+                </SectionCard>
+            </div>
+
+            <div class="space-y-4">
+                <SectionCard :title="t('common.details')" :description="t('tickets.meta_hint')">
+                    <dl class="space-y-4 text-sm">
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.owner') }}</dt>
+                            <dd class="mt-1 text-slate-800">{{ ticket.user?.email ?? '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.created_at') }}</dt>
+                            <dd class="mt-1 text-slate-800">{{ formatDate(ticket.created_at) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.updated_at') }}</dt>
+                            <dd class="mt-1 text-slate-800">{{ formatDate(ticket.updated_at) }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.age') }}</dt>
+                            <dd class="mono mt-1 text-slate-700">{{ ageLabel }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.id') }}</dt>
+                            <dd class="mono mt-1 text-slate-700">#{{ ticket.id }}</dd>
+                        </div>
+                    </dl>
+                </SectionCard>
+
+                <SectionCard :title="t('tickets.guidance_title')" :description="t('tickets.guidance_hint')">
+                    <ul class="space-y-2">
+                        <li class="insight-item">{{ t('tickets.guidance_item_1') }}</li>
+                        <li class="insight-item">{{ t('tickets.guidance_item_2') }}</li>
+                        <li class="insight-item">{{ t('tickets.guidance_item_3') }}</li>
+                    </ul>
+                </SectionCard>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

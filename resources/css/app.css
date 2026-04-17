@@ -64,6 +64,10 @@
         @apply rounded-2xl border border-slate-200/80 bg-slate-50/80;
     }
 
+    .surface-card-strong {
+        @apply rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white shadow-[0_24px_54px_-32px_rgba(2,6,23,0.65)];
+    }
+
     .btn-primary {
         @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-60;
     }
@@ -98,6 +102,21 @@
 
     .page-subtitle {
         @apply mt-1 text-sm text-slate-500;
+    }
+
+    .section-kicker {
+        @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500;
+    }
+
+    .gradient-text {
+        @apply bg-gradient-to-r from-blue-700 via-sky-600 to-indigo-600 bg-clip-text text-transparent;
+    }
+
+    .hero-grid {
+        background-image:
+            linear-gradient(to right, rgba(148, 163, 184, 0.14) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+        background-size: 22px 22px;
     }
 
     .table-shell {
@@ -147,6 +166,46 @@
 
     .tiny-muted {
         @apply text-[11px] uppercase tracking-wide text-slate-500;
+    }
+
+    .insight-item {
+        @apply rounded-xl border border-slate-200/80 bg-slate-50/70 px-3 py-3 text-sm text-slate-700;
+    }
+
+    .pill {
+        @apply inline-flex items-center rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600;
+    }
+
+    .sparkline {
+        @apply flex items-end gap-1.5;
+    }
+
+    .sparkline > span {
+        @apply inline-block w-2 rounded-full bg-slate-300 transition duration-300;
+    }
+
+    .faq-item {
+        @apply rounded-2xl border border-slate-200/80 bg-white/90 p-4 transition hover:border-slate-300;
+    }
+
+    .faq-item summary {
+        @apply cursor-pointer list-none text-sm font-semibold text-slate-900;
+    }
+
+    .faq-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .faq-item[open] summary {
+        @apply text-slate-800;
+    }
+
+    .faq-item p {
+        @apply mt-2 text-sm leading-relaxed text-slate-600;
+    }
+
+    .data-dot {
+        @apply inline-flex h-2.5 w-2.5 rounded-full;
     }
 }
 
