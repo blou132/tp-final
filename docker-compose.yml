@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tp-final-app
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - mongodb
+    volumes:
+      - app_code:/var/www/html
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: tp-final-nginx
+    ports:
+      - "8000:80"
+    depends_on:
+      - app
+    volumes:
+      - app_code:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  mysql:
+    image: mysql:8.4
+    container_name: tp-final-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tp_final
+      MYSQL_USER: tp_user
+      MYSQL_PASSWORD: tp_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:8
+    container_name: tp-final-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  app_code:
+  mysql_data:
+  mongodb_data:

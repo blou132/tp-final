@@ -1,0 +1,33 @@
+image: php:8.3
+
+pipelines:
+  default:
+    - step:
+        name: "Tests Laravel"
+        caches:
+          - composer
+        script:
+          - apt-get update && apt-get install -y git unzip zip curl libzip-dev libicu-dev libonig-dev autoconf g++ make pkg-config
+          - docker-php-ext-install pdo_mysql bcmath intl zip
+          - pecl install mongodb
+          - docker-php-ext-enable mongodb
+          - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+          - cp .env.example .env
+          - composer install --no-interaction --prefer-dist
+          - php artisan key:generate
+          - php artisan test
+
+    - step:
+        name: "Build Docker image"
+        image: docker:27
+        services:
+          - docker
+        script:
+          - docker build -t tp-final-bts:latest .
+
+definitions:
+  caches:
+    composer: /root/.composer/cache
+  services:
+    docker:
+      memory: 3072
