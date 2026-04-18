@@ -1,26 +1,13 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
-const page = usePage();
 const { t, locale, supportedLocales } = useI18n();
-
-const currentPath = computed(() => {
-    const url = page.url ?? '/';
-
-    if (typeof url !== 'string') {
-        return '/';
-    }
-
-    return url.startsWith('/') ? url : `/${url}`;
-});
 
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
-        redirect: currentPath.value,
     });
 </script>
 

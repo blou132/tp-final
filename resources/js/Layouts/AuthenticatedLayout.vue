@@ -60,20 +60,9 @@ const todayLabel = computed(() =>
     }).format(new Date()),
 );
 
-const currentPath = computed(() => {
-    const url = page.url ?? '/';
-
-    if (typeof url !== 'string') {
-        return '/';
-    }
-
-    return url.startsWith('/') ? url : `/${url}`;
-});
-
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
-        redirect: currentPath.value,
     });
 
 const navItems = [

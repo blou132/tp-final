@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
 defineProps({
@@ -22,23 +22,11 @@ defineProps({
     },
 });
 
-const page = usePage();
 const { t, locale, supportedLocales } = useI18n();
-
-const currentPath = computed(() => {
-    const url = page.url ?? '/';
-
-    if (typeof url !== 'string') {
-        return '/';
-    }
-
-    return url.startsWith('/') ? url : `/${url}`;
-});
 
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
-        redirect: currentPath.value,
     });
 
 const navLinks = computed(() => [

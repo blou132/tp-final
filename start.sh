@@ -192,4 +192,4 @@ echo "Application prete : http://localhost:8000"
 echo "Admin : admin@example.com / password"
 echo "User  : user@example.com / password"
 
-open_browser "http://localhost:8000/?v=$(date +%s)"
+open_browser "http://localhost:8000/"
