@@ -89,7 +89,7 @@ const submit = () => {
             </label>
 
             <div class="pt-2">
-                <PrimaryButton class="w-full justify-center" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                <PrimaryButton type="submit" class="w-full justify-center" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                     {{ t('auth.login_button') }}
                 </PrimaryButton>
             </div>

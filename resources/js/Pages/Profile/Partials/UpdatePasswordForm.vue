@@ -83,7 +83,7 @@ const updatePassword = () => {
             </div>
 
             <div class="flex items-center gap-3">
-                <PrimaryButton :disabled="form.processing">{{ t('common.save') }}</PrimaryButton>
+                <PrimaryButton type="submit" :disabled="form.processing">{{ t('common.save') }}</PrimaryButton>
                 <Transition
                     enter-active-class="transition ease-in-out"
                     enter-from-class="opacity-0"
