@@ -31,6 +31,18 @@ lartisan() {
     dcompose exec -T --user www-data app php artisan "$@"
 }
 
+build_frontend_assets() {
+    echo "Build des assets frontend..."
+
+    "${DOCKER_CMD[@]}" run --rm \
+        --user "$(id -u):$(id -g)" \
+        -e npm_config_cache=/tmp/npm-cache \
+        -v "${ROOT_DIR}:/app" \
+        -w /app \
+        node:22 \
+        sh -lc 'npm ci && npm run build'
+}
+
 open_browser() {
     local url="$1"
 
@@ -107,8 +119,10 @@ fi
 echo "Reinitialisation des conteneurs/volumes du projet..."
 dcompose down -v --remove-orphans
 
-echo "Build de l'image applicative (sans cache)..."
-dcompose build --no-cache app
+build_frontend_assets
+
+echo "Build de l'image applicative..."
+dcompose build app
 
 echo "Demarrage des services..."
 dcompose up -d --force-recreate
@@ -123,7 +137,9 @@ storage/framework/cache/data \
 storage/framework/sessions \
 storage/framework/views \
 storage/logs \
-bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache"
+bootstrap/cache \
+&& find storage bootstrap/cache -type d -exec chmod 777 {} + \
+&& find storage bootstrap/cache -type f -exec chmod 666 {} +"
 
 echo "Attente de MySQL..."
 MAX_RETRIES=90
@@ -139,7 +155,7 @@ until dcompose exec -T mysql sh -lc "mysqladmin ping -h127.0.0.1 -uroot -proot -
 done
 
 echo "Attente de la connexion Laravel -> MySQL..."
-MAX_RETRIES=60
+MAX_RETRIES=180
 COUNTER=0
 until dcompose exec -T --user www-data app php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $kernel=$app->make("Illuminate\\Contracts\\Console\\Kernel"); $kernel->bootstrap(); Illuminate\Support\Facades\DB::select("SELECT 1");' >/dev/null 2>&1; do
     COUNTER=$((COUNTER + 1))

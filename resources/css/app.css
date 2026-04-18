@@ -6,15 +6,15 @@
 
 @layer base {
     :root {
-        --app-bg-start: #f3f7fd;
-        --app-bg-end: #edf3fb;
+        --app-bg-start: #f5f7ff;
+        --app-bg-end: #eef2ff;
         --app-text: #0f172a;
         --app-muted: #475569;
         --surface: #ffffff;
-        --surface-soft: #f8fbff;
-        --border: #dbe7f5;
-        --brand: #0f5ac7;
-        --brand-soft: #dbeafe;
+        --surface-soft: #f8faff;
+        --border: #dfe5f3;
+        --brand: #4f46e5;
+        --brand-soft: #e0e7ff;
         --success: #047857;
         --warning: #b45309;
         --danger: #b91c1c;
@@ -51,13 +51,13 @@
     .app-shell {
         @apply min-h-screen;
         background:
-            radial-gradient(circle at 12% 8%, rgba(59, 130, 246, 0.15), transparent 38%),
-            radial-gradient(circle at 92% 5%, rgba(16, 185, 129, 0.11), transparent 30%),
-            linear-gradient(155deg, #f3f7fd 0%, #edf3fb 45%, #f8fbff 100%);
+            radial-gradient(circle at 8% 6%, rgba(79, 70, 229, 0.16), transparent 36%),
+            radial-gradient(circle at 94% 4%, rgba(14, 165, 233, 0.14), transparent 28%),
+            linear-gradient(155deg, #f5f7ff 0%, #eef2ff 42%, #f8fbff 100%);
     }
 
     .surface-card {
-        @apply rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_18px_36px_-28px_rgba(15,23,42,0.45)] backdrop-blur transition duration-200;
+        @apply rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_24px_48px_-34px_rgba(15,23,42,0.48)] backdrop-blur transition duration-200;
     }
 
     .surface-card-soft {
@@ -69,7 +69,7 @@
     }
 
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:opacity-60;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_22px_-14px_rgba(79,70,229,0.85)] transition hover:-translate-y-0.5 hover:from-indigo-700 hover:to-indigo-800 hover:shadow-[0_14px_26px_-14px_rgba(79,70,229,0.95)] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:opacity-60;
     }
 
     .btn-secondary {
@@ -153,7 +153,7 @@
     }
 
     .panel-hover {
-        @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_42px_-28px_rgba(15,23,42,0.45)];
+        @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_26px_44px_-28px_rgba(79,70,229,0.35)];
     }
 
     .metric-chip {
@@ -207,6 +207,24 @@
     .data-dot {
         @apply inline-flex h-2.5 w-2.5 rounded-full;
     }
+
+    .progress-track {
+        @apply h-1.5 rounded-full bg-slate-200/90 overflow-hidden;
+    }
+
+    .progress-fill {
+        @apply h-full rounded-full transition-all duration-700 ease-out;
+        animation: progress-grow 0.8s ease-out both;
+    }
+
+    .progress-fill::after {
+        content: '';
+        display: block;
+        width: 40%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.45) 55%, transparent 100%);
+        animation: progress-shimmer 2s linear infinite;
+    }
 }
 
 @keyframes reveal-up {
@@ -217,5 +235,27 @@
     to {
         opacity: 1;
         transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes progress-grow {
+    from {
+        transform: scaleX(0.35);
+        transform-origin: left center;
+        opacity: 0.45;
+    }
+    to {
+        transform: scaleX(1);
+        transform-origin: left center;
+        opacity: 1;
+    }
+}
+
+@keyframes progress-shimmer {
+    from {
+        transform: translateX(-130%);
+    }
+    to {
+        transform: translateX(260%);
     }
 }

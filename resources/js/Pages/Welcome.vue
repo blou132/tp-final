@@ -49,15 +49,16 @@ const navLinks = computed(() => [
 ]);
 
 const statCards = computed(() => [
-    { label: t('welcome.metric_sla_label'), value: '98%', note: t('welcome.metric_sla_note'), tone: 'bg-sky-500' },
-    { label: t('welcome.metric_revenue_label'), value: '€ 1.2M', note: t('welcome.metric_revenue_note'), tone: 'bg-emerald-500' },
+    { label: t('welcome.metric_sla_label'), value: '98%', note: t('welcome.metric_sla_note'), tone: 'bg-sky-500', bar: 98 },
+    { label: t('welcome.metric_revenue_label'), value: '€ 1.2M', note: t('welcome.metric_revenue_note'), tone: 'bg-emerald-500', bar: 82 },
     {
         label: t('welcome.metric_resolution_label'),
         value: '2.8h',
         note: t('welcome.metric_resolution_note'),
         tone: 'bg-amber-500',
+        bar: 74,
     },
-    { label: t('welcome.metric_uptime_label'), value: '99.95%', note: t('welcome.metric_uptime_note'), tone: 'bg-indigo-500' },
+    { label: t('welcome.metric_uptime_label'), value: '99.95%', note: t('welcome.metric_uptime_note'), tone: 'bg-indigo-500', bar: 99 },
 ]);
 
 const moduleCards = computed(() => [
@@ -219,8 +220,8 @@ const faqItems = computed(() => [
                                 <span>{{ t('welcome.live_item_1') }}</span>
                                 <span class="mono">42</span>
                             </div>
-                            <div class="h-1.5 rounded-full bg-slate-700">
-                                <div class="h-1.5 w-2/3 rounded-full bg-sky-400" />
+                            <div class="progress-track bg-slate-700/90">
+                                <div class="progress-fill bg-sky-400" style="width: 68%" />
                             </div>
                         </div>
                         <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
@@ -228,8 +229,8 @@ const faqItems = computed(() => [
                                 <span>{{ t('welcome.live_item_2') }}</span>
                                 <span class="mono">18</span>
                             </div>
-                            <div class="h-1.5 rounded-full bg-slate-700">
-                                <div class="h-1.5 w-1/2 rounded-full bg-amber-400" />
+                            <div class="progress-track bg-slate-700/90">
+                                <div class="progress-fill bg-amber-400" style="width: 52%" />
                             </div>
                         </div>
                         <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
@@ -237,8 +238,8 @@ const faqItems = computed(() => [
                                 <span>{{ t('welcome.live_item_3') }}</span>
                                 <span class="mono">€ 64k</span>
                             </div>
-                            <div class="h-1.5 rounded-full bg-slate-700">
-                                <div class="h-1.5 w-4/5 rounded-full bg-emerald-400" />
+                            <div class="progress-track bg-slate-700/90">
+                                <div class="progress-fill bg-emerald-400" style="width: 84%" />
                             </div>
                         </div>
                         <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
@@ -246,8 +247,8 @@ const faqItems = computed(() => [
                                 <span>{{ t('welcome.live_item_4') }}</span>
                                 <span class="mono">99.95%</span>
                             </div>
-                            <div class="h-1.5 rounded-full bg-slate-700">
-                                <div class="h-1.5 w-[96%] rounded-full bg-indigo-400" />
+                            <div class="progress-track bg-slate-700/90">
+                                <div class="progress-fill bg-indigo-400" style="width: 96%" />
                             </div>
                         </div>
                     </div>
@@ -263,8 +264,8 @@ const faqItems = computed(() => [
                     <p class="tiny-muted">{{ item.label }}</p>
                     <p class="mt-2 text-2xl font-bold text-slate-900">{{ item.value }}</p>
                     <p class="mt-1 text-xs text-slate-500">{{ item.note }}</p>
-                    <div class="mt-3 h-1.5 rounded-full bg-slate-200">
-                        <div class="h-1.5 rounded-full" :class="item.tone" :style="{ width: '76%' }" />
+                    <div class="progress-track mt-3">
+                        <div class="progress-fill" :class="item.tone" :style="{ width: `${item.bar}%` }" />
                     </div>
                 </article>
             </section>

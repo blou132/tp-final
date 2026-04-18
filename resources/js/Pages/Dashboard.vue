@@ -305,8 +305,8 @@ const alertItems = computed(() => {
                 <div class="surface-card-soft p-4">
                     <p class="tiny-muted">{{ t('dashboard.health_score') }}</p>
                     <p class="mt-1 text-3xl font-bold text-slate-900">{{ healthScore }}%</p>
-                    <div class="mt-3 h-2 rounded-full bg-slate-200">
-                        <div class="h-2 rounded-full bg-slate-900" :style="{ width: `${healthScore}%` }" />
+                    <div class="progress-track mt-3 h-2">
+                        <div class="progress-fill bg-slate-900" :style="{ width: `${healthScore}%` }" />
                     </div>
                     <p class="mt-2 text-xs text-slate-500">{{ t('dashboard.health_hint') }}</p>
                 </div>
@@ -429,8 +429,8 @@ const alertItems = computed(() => {
                                     <StatusBadge :status="item.key" small />
                                     <span class="mono text-xs text-slate-500">{{ item.count }} ({{ item.percentage }}%)</span>
                                 </div>
-                                <div class="h-2 rounded-full bg-slate-200">
-                                    <div class="h-2 rounded-full" :class="item.tone" :style="{ width: `${item.percentage}%` }" />
+                                <div class="progress-track h-2">
+                                    <div class="progress-fill" :class="item.tone" :style="{ width: `${item.percentage}%` }" />
                                 </div>
                             </div>
                         </div>
@@ -447,8 +447,8 @@ const alertItems = computed(() => {
                                     <StatusBadge :status="item.key" small />
                                     <span class="mono text-xs text-slate-500">{{ item.count }} ({{ item.percentage }}%)</span>
                                 </div>
-                                <div class="h-2 rounded-full bg-slate-200">
-                                    <div class="h-2 rounded-full" :class="item.tone" :style="{ width: `${item.percentage}%` }" />
+                                <div class="progress-track h-2">
+                                    <div class="progress-fill" :class="item.tone" :style="{ width: `${item.percentage}%` }" />
                                 </div>
                             </div>
                         </div>

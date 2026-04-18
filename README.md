@@ -131,7 +131,13 @@ Application web: `http://127.0.0.1:8000`
 ```
 
 `start.sh` detecte automatiquement si Docker doit etre lance avec `sudo`.
-Le script relance l'environnement proprement (reset des conteneurs/volumes du projet), met a jour le `.env`, le copie dans le conteneur `app`, puis reapplique les migrations/seed.
+Le script:
+- relance l'environnement proprement (reset conteneurs/volumes),
+- build les assets frontend (`npm ci && npm run build`) via `node:22`,
+- build et relance l'image applicative,
+- reapplique migrations/seed + clear cache Laravel.
+
+Avec la config Docker actuelle, le code du projet est monte directement (`./:/var/www/html`), donc les modifications de fichiers Vue/CSS sont bien prises en compte.
 
 ### Lancer les conteneurs
 ```bash
@@ -155,6 +161,31 @@ Services:
 sudo docker compose exec -T --user www-data app php artisan optimize:clear || true
 sudo docker compose restart app nginx
 sudo docker compose exec -T app php -r 'require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $k=$app->make("Illuminate\\Contracts\\Console\\Kernel"); $k->bootstrap(); var_dump(config("view.compiled"));'
+```
+
+### Depannage frontend: "je modifie mais rien ne change"
+Cause la plus frequente: modification du mauvais fichier ou assets Vite non rebuild.
+
+Fichiers frontend reels utilises par l'app:
+- Entrypoint Blade Inertia: `resources/views/app.blade.php`
+- Landing: `resources/js/Pages/Welcome.vue`
+- Dashboard: `resources/js/Pages/Dashboard.vue`
+- Styles globaux: `resources/css/app.css`
+
+Important:
+- Le projet est en **Inertia + Vue**, pas en pages Blade `welcome.blade.php` / `dashboard.blade.php`.
+- Modifier une page Blade non utilisee ne changera rien visuellement.
+
+Commandes de correction:
+```bash
+./start.sh
+sudo docker compose exec -T --user www-data app php artisan optimize:clear
+sudo docker compose restart app nginx
+```
+
+Si vous voulez verifier rapidement le build frontend:
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/app" -w /app node:22 sh -lc "npm ci && npm run build"
 ```
 
 ## 10. Tests
