@@ -15,6 +15,12 @@ class LocaleController extends Controller
 
         $request->session()->put('locale', $locale);
 
-        return back();
+        $redirect = $request->query('redirect');
+
+        if (is_string($redirect) && str_starts_with($redirect, '/')) {
+            return redirect()->to($redirect);
+        }
+
+        return redirect()->route('home');
     }
 }

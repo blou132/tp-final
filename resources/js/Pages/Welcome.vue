@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
 defineProps({
@@ -22,7 +22,24 @@ defineProps({
     },
 });
 
-const { t } = useI18n();
+const page = usePage();
+const { t, locale, supportedLocales } = useI18n();
+
+const currentPath = computed(() => {
+    const url = page.url ?? '/';
+
+    if (typeof url !== 'string') {
+        return '/';
+    }
+
+    return url.startsWith('/') ? url : `/${url}`;
+});
+
+const localeSwitchHref = (localeCode) =>
+    route('locale.switch', {
+        locale: localeCode,
+        redirect: currentPath.value,
+    });
 
 const navLinks = computed(() => [
     { label: t('welcome.nav_features'), href: '#features' },
@@ -141,6 +158,22 @@ const faqItems = computed(() => [
                 </nav>
 
                 <div class="flex flex-wrap items-center gap-2">
+                    <div class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
+                        <Link
+                            v-for="localeCode in supportedLocales"
+                            :key="localeCode"
+                            :href="localeSwitchHref(localeCode)"
+                            :class="[
+                                'rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition',
+                                locale === localeCode
+                                    ? 'bg-slate-900 text-white'
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                            ]"
+                        >
+                            {{ localeCode }}
+                        </Link>
+                    </div>
+
                     <Link v-if="canLogin" :href="route('login')" class="btn-secondary">{{ t('welcome.cta_login') }}</Link>
                     <Link v-if="canRegister" :href="route('register')" class="btn-primary">{{ t('welcome.cta_register') }}</Link>
                 </div>

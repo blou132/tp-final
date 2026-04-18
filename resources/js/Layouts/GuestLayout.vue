@@ -1,9 +1,27 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
-const { t } = useI18n();
+const page = usePage();
+const { t, locale, supportedLocales } = useI18n();
+
+const currentPath = computed(() => {
+    const url = page.url ?? '/';
+
+    if (typeof url !== 'string') {
+        return '/';
+    }
+
+    return url.startsWith('/') ? url : `/${url}`;
+});
+
+const localeSwitchHref = (localeCode) =>
+    route('locale.switch', {
+        locale: localeCode,
+        redirect: currentPath.value,
+    });
 </script>
 
 <template>
@@ -14,6 +32,24 @@ const { t } = useI18n();
         </div>
 
         <div class="relative w-full max-w-5xl">
+            <div class="mb-4 flex justify-center lg:justify-end">
+                <div class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white/90 p-1 shadow-sm">
+                    <Link
+                        v-for="localeCode in supportedLocales"
+                        :key="localeCode"
+                        :href="localeSwitchHref(localeCode)"
+                        :class="[
+                            'rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition',
+                            locale === localeCode
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                        ]"
+                    >
+                        {{ localeCode }}
+                    </Link>
+                </div>
+            </div>
+
             <div class="grid items-stretch gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
                 <aside class="surface-card reveal hidden p-7 lg:block">
                     <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">{{ t('app_name') }}</p>

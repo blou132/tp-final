@@ -60,6 +60,22 @@ const todayLabel = computed(() =>
     }).format(new Date()),
 );
 
+const currentPath = computed(() => {
+    const url = page.url ?? '/';
+
+    if (typeof url !== 'string') {
+        return '/';
+    }
+
+    return url.startsWith('/') ? url : `/${url}`;
+});
+
+const localeSwitchHref = (localeCode) =>
+    route('locale.switch', {
+        locale: localeCode,
+        redirect: currentPath.value,
+    });
+
 const navItems = [
     {
         key: 'dashboard',
@@ -165,7 +181,7 @@ const closeMobileSidebar = () => {
                                 <Link
                                     v-for="localeCode in supportedLocales"
                                     :key="localeCode"
-                                    :href="route('locale.switch', localeCode)"
+                                    :href="localeSwitchHref(localeCode)"
                                     :class="[
                                         'rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition',
                                         locale === localeCode
@@ -316,7 +332,7 @@ const closeMobileSidebar = () => {
                     <Link
                         v-for="localeCode in supportedLocales"
                         :key="localeCode"
-                        :href="route('locale.switch', localeCode)"
+                        :href="localeSwitchHref(localeCode)"
                         @click="closeMobileSidebar"
                         :class="[
                             'rounded-lg px-3 py-1.5 text-xs font-semibold uppercase',
