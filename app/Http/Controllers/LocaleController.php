@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class LocaleController extends Controller
@@ -32,7 +33,13 @@ class LocaleController extends Controller
                 $target = $path;
 
                 if (is_string($query) && $query !== '') {
-                    $target .= '?'.$query;
+                    parse_str($query, $queryParams);
+
+                    $queryParams = Arr::except((array) $queryParams, ['v', 'lang']);
+
+                    if ($queryParams !== []) {
+                        $target .= '?'.http_build_query($queryParams);
+                    }
                 }
 
                 return redirect()->to($target);

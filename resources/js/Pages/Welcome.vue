@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
@@ -30,459 +30,1053 @@ const localeSwitchHref = (localeCode) =>
     });
 
 const navLinks = computed(() => [
-    { label: t('welcome.nav_features'), href: '#features' },
-    { label: t('welcome.nav_operations'), href: '#operations' },
-    { label: t('welcome.nav_security'), href: '#security' },
-    { label: t('welcome.nav_faq'), href: '#faq' },
+    { label: t('welcome.nav_features', 'Fonctionnalités'), href: '#features' },
+    { label: t('welcome.nav_operations', 'Workflow'), href: '#workflow' },
+    { label: t('welcome.nav_security', 'Sécurité'), href: '#stats' },
+    { label: t('welcome.nav_faq', 'FAQ'), href: '#cta' },
 ]);
 
-const statCards = computed(() => [
-    { label: t('welcome.metric_sla_label'), value: '98%', note: t('welcome.metric_sla_note'), tone: 'bg-sky-500', bar: 98 },
-    { label: t('welcome.metric_revenue_label'), value: '€ 1.2M', note: t('welcome.metric_revenue_note'), tone: 'bg-emerald-500', bar: 82 },
-    {
-        label: t('welcome.metric_resolution_label'),
-        value: '2.8h',
-        note: t('welcome.metric_resolution_note'),
-        tone: 'bg-amber-500',
-        bar: 74,
-    },
-    { label: t('welcome.metric_uptime_label'), value: '99.95%', note: t('welcome.metric_uptime_note'), tone: 'bg-indigo-500', bar: 99 },
+const dashboardPreviewMetrics = computed(() => [
+    { label: t('welcome.live_item_1', 'Tickets ouverts'), value: '42', progress: 78, tone: 'tone-primary' },
+    { label: t('welcome.live_item_2', 'Paiements échoués'), value: '18', progress: 42, tone: 'tone-danger' },
+    { label: t('welcome.live_item_3', 'Collecté cette semaine'), value: '64 000€', progress: 88, tone: 'tone-success' },
+    { label: t('welcome.live_item_4', 'Disponibilité système'), value: '99.95%', progress: 99, tone: 'tone-info' },
 ]);
 
-const moduleCards = computed(() => [
+const socialProof = computed(() => ['Nordlane', 'BrightOps', 'PulseDesk', 'Arc Finance', 'Flowstack']);
+
+const featureCards = computed(() => [
     {
-        title: t('welcome.module_tickets_title'),
-        description: t('welcome.module_tickets_desc'),
-        icon: 'M4 7.5h16M4 12h11M4 16.5h8M3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13A1.5 1.5 0 0 1 3.5 4z',
-    },
-    {
-        title: t('welcome.module_payments_title'),
-        description: t('welcome.module_payments_desc'),
-        icon: 'M4 7h16M4 12h16M4 17h7M3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13A1.5 1.5 0 0 1 3.5 4z',
+        title: t('welcome.module_tickets_title', 'Automatisation support'),
+        description: t(
+            'welcome.module_tickets_desc',
+            'Priorisation intelligente des tickets, règles d’escalade et suivi des SLA dans un flux unifié.',
+        ),
+        icon: 'SO',
     },
     {
-        title: t('welcome.module_roles_title'),
-        description: t('welcome.module_roles_desc'),
-        icon: 'M16 20a4 4 0 0 0-8 0M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6M20 20a3.5 3.5 0 0 0-3.5-3.5M17.5 9a2.5 2.5 0 1 0 0-5',
+        title: t('welcome.module_payments_title', 'Suivi des paiements'),
+        description: t(
+            'welcome.module_payments_desc',
+            'Vue temps réel des encaissements, rejets et transactions en attente avec contexte client immédiat.',
+        ),
+        icon: 'PA',
     },
     {
-        title: t('welcome.module_audit_title'),
-        description: t('welcome.module_audit_desc'),
-        icon: 'M4 5h9l4 4v10a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 19V6.5A1.5 1.5 0 0 1 4.5 5zM13 5v4h4',
+        title: t('welcome.module_audit_title', 'Audit & conformité'),
+        description: t(
+            'welcome.module_audit_desc',
+            'Journalisation des actions critiques pour maintenance, conformité et pilotage de performance.',
+        ),
+        icon: 'AU',
     },
-]);
-
-const whyItems = computed(() => [
-    { title: t('welcome.why_1_title'), description: t('welcome.why_1_desc') },
-    { title: t('welcome.why_2_title'), description: t('welcome.why_2_desc') },
-    { title: t('welcome.why_3_title'), description: t('welcome.why_3_desc') },
-]);
-
-const ticketItems = computed(() => [
-    t('welcome.tickets_block_item_1'),
-    t('welcome.tickets_block_item_2'),
-    t('welcome.tickets_block_item_3'),
-    t('welcome.tickets_block_item_4'),
-]);
-
-const paymentItems = computed(() => [
-    t('welcome.payments_block_item_1'),
-    t('welcome.payments_block_item_2'),
-    t('welcome.payments_block_item_3'),
-    t('welcome.payments_block_item_4'),
-]);
-
-const securityItems = computed(() => [
-    t('welcome.security_block_item_1'),
-    t('welcome.security_block_item_2'),
-    t('welcome.security_block_item_3'),
-    t('welcome.security_block_item_4'),
 ]);
 
 const workflowSteps = computed(() => [
-    { title: t('welcome.workflow_step_1_title'), description: t('welcome.workflow_step_1_desc') },
-    { title: t('welcome.workflow_step_2_title'), description: t('welcome.workflow_step_2_desc') },
-    { title: t('welcome.workflow_step_3_title'), description: t('welcome.workflow_step_3_desc') },
-    { title: t('welcome.workflow_step_4_title'), description: t('welcome.workflow_step_4_desc') },
+    {
+        title: t('welcome.workflow_step_1_title', 'Centraliser'),
+        description: t('welcome.workflow_step_1_desc', 'Tickets et paiements arrivent dans un cockpit unique.'),
+    },
+    {
+        title: t('welcome.workflow_step_2_title', 'Prioriser'),
+        description: t('welcome.workflow_step_2_desc', 'Les équipes traitent d’abord les files à impact élevé.'),
+    },
+    {
+        title: t('welcome.workflow_step_3_title', 'Exécuter'),
+        description: t('welcome.workflow_step_3_desc', 'Workflow guidé avec statuts, validations et responsabilités claires.'),
+    },
+    {
+        title: t('welcome.workflow_step_4_title', 'Mesurer'),
+        description: t('welcome.workflow_step_4_desc', 'Les KPI mettent en évidence la qualité opérationnelle en continu.'),
+    },
 ]);
 
-const benefitItems = computed(() => [
-    { title: t('welcome.benefit_1_title'), description: t('welcome.benefit_1_desc') },
-    { title: t('welcome.benefit_2_title'), description: t('welcome.benefit_2_desc') },
-    { title: t('welcome.benefit_3_title'), description: t('welcome.benefit_3_desc') },
-    { title: t('welcome.benefit_4_title'), description: t('welcome.benefit_4_desc') },
+const statsCards = computed(() => [
+    {
+        label: t('welcome.metric_sla_label', 'SLA respecté'),
+        value: '98%',
+        note: t('welcome.metric_sla_note', 'Tickets clôturés dans les objectifs.'),
+    },
+    {
+        label: t('welcome.metric_revenue_label', 'Collecte hebdo'),
+        value: '€ 64K',
+        note: t('welcome.metric_revenue_note', 'Flux transactions consolidé.'),
+    },
+    {
+        label: t('welcome.metric_resolution_label', 'Résolution médiane'),
+        value: '2.8h',
+        note: t('welcome.metric_resolution_note', 'Temps moyen par incident.'),
+    },
+    {
+        label: t('welcome.metric_uptime_label', 'Disponibilité'),
+        value: '99.95%',
+        note: t('welcome.metric_uptime_note', 'Monitoring plateforme en direct.'),
+    },
 ]);
 
-const faqItems = computed(() => [
-    { question: t('welcome.faq_q1'), answer: t('welcome.faq_a1') },
-    { question: t('welcome.faq_q2'), answer: t('welcome.faq_a2') },
-    { question: t('welcome.faq_q3'), answer: t('welcome.faq_a3') },
-    { question: t('welcome.faq_q4'), answer: t('welcome.faq_a4') },
-]);
+let revealObserver = null;
+const revealNodes = new Set();
+
+const registerReveal = (element) => {
+    if (!element || revealNodes.has(element)) {
+        return;
+    }
+
+    revealNodes.add(element);
+
+    if (revealObserver) {
+        revealObserver.observe(element);
+    }
+};
+
+onMounted(() => {
+    revealObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        },
+        {
+            threshold: 0.16,
+        },
+    );
+
+    revealNodes.forEach((node) => revealObserver.observe(node));
+});
+
+onBeforeUnmount(() => {
+    if (revealObserver) {
+        revealObserver.disconnect();
+    }
+});
 </script>
 
 <template>
-    <Head :title="t('app_name')" />
+    <Head :title="t('app_name', 'Support & Paiements')" />
 
-    <div class="app-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-7xl">
-            <header class="surface-card reveal mb-8 flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6">
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white">SP</span>
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-widest text-slate-500">{{ t('welcome.hero_kicker') }}</p>
-                        <h1 class="text-lg font-bold text-slate-900">{{ t('app_name') }}</h1>
-                    </div>
-                </div>
+    <div class="landing-saas">
+        <div class="landing-grid" />
+        <div class="landing-glow landing-glow-left" />
+        <div class="landing-glow landing-glow-right" />
 
-                <nav class="hidden items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 lg:flex">
+        <div class="container-shell">
+            <header class="top-nav reveal-node" :ref="registerReveal">
+                <Link :href="route('home')" class="brand">
+                    <span class="brand-mark">SP</span>
+                    <span>
+                        <small class="brand-kicker">Plateforme SaaS</small>
+                        <strong class="brand-title">{{ t('app_name', 'Support & Paiements') }}</strong>
+                    </span>
+                </Link>
+
+                <nav class="nav-center">
                     <a
                         v-for="item in navLinks"
                         :key="item.href"
                         :href="item.href"
-                        class="rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                        class="nav-link"
                     >
                         {{ item.label }}
                     </a>
                 </nav>
 
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
+                <div class="nav-actions">
+                    <div class="locale-switch">
                         <Link
                             v-for="localeCode in supportedLocales"
                             :key="localeCode"
                             :href="localeSwitchHref(localeCode)"
-                            :class="[
-                                'rounded-lg px-2.5 py-1 text-xs font-semibold uppercase transition',
-                                locale === localeCode
-                                    ? 'bg-slate-900 text-white'
-                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-                            ]"
+                            :class="['locale-pill', locale === localeCode ? 'is-active' : '']"
                         >
                             {{ localeCode }}
                         </Link>
                     </div>
 
-                    <Link v-if="canLogin" :href="route('login')" class="btn-secondary">{{ t('welcome.cta_login') }}</Link>
-                    <Link v-if="canRegister" :href="route('register')" class="btn-primary">{{ t('welcome.cta_register') }}</Link>
+                    <Link v-if="canLogin" :href="route('login')" class="btn btn-ghost">
+                        {{ t('welcome.cta_login', 'Accéder à l’espace') }}
+                    </Link>
+                    <Link v-if="canRegister" :href="route('register')" class="btn btn-primary">
+                        {{ t('welcome.cta_register', 'Créer un compte') }}
+                    </Link>
                 </div>
             </header>
 
-            <section class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]" id="hero">
-                <article class="surface-card reveal reveal-delay-1 panel-hover relative overflow-hidden p-6 sm:p-8">
-                    <div class="absolute right-[-3rem] top-[-3rem] h-44 w-44 rounded-full bg-blue-200/40 blur-3xl" />
-                    <div class="absolute bottom-[-3rem] left-[-2rem] h-32 w-32 rounded-full bg-emerald-200/30 blur-3xl" />
+            <section class="hero-section reveal-node" :ref="registerReveal">
+                <article class="hero-copy">
+                    <span class="hero-pill">Cockpit support & finance</span>
+                    <h1>
+                        Pilotez tickets et paiements
+                        <span>depuis une seule console.</span>
+                    </h1>
+                    <p>
+                        Un environnement opérationnel premium pour centraliser le support client, sécuriser les flux
+                        de paiement et suivre la performance en temps réel.
+                    </p>
 
-                    <div class="relative">
-                        <span class="pill">{{ t('welcome.hero_badge') }}</span>
-                        <h2 class="mt-4 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-                            <span class="gradient-text">{{ t('welcome.hero_title') }}</span>
-                        </h2>
-                        <p class="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
-                            {{ t('welcome.hero_text') }}
-                        </p>
-                        <p class="mt-3 text-sm text-slate-500">
-                            {{ t('welcome.hero_secondary') }}
-                        </p>
-
-                        <div class="mt-6 flex flex-wrap gap-2">
-                            <Link v-if="canLogin" :href="route('login')" class="btn-primary">{{ t('welcome.cta_login') }}</Link>
-                            <Link v-if="canRegister" :href="route('register')" class="btn-secondary">{{ t('welcome.cta_register') }}</Link>
-                        </div>
-
-                        <div class="mt-6 flex flex-wrap gap-2">
-                            <span class="pill">{{ t('welcome.hero_chip_1') }}</span>
-                            <span class="pill">{{ t('welcome.hero_chip_2') }}</span>
-                            <span class="pill">{{ t('welcome.hero_chip_3') }}</span>
-                        </div>
+                    <div class="hero-ctas">
+                        <Link v-if="canLogin" :href="route('login')" class="btn btn-primary btn-xl">
+                            {{ t('welcome.cta_login', 'Accéder à l’espace') }}
+                        </Link>
+                        <Link v-if="canRegister" :href="route('register')" class="btn btn-ghost btn-xl">
+                            {{ t('welcome.cta_register', 'Créer un compte') }}
+                        </Link>
                     </div>
                 </article>
 
-                <aside class="surface-card-strong reveal reveal-delay-2 panel-hover hero-grid p-6">
-                    <p class="section-kicker text-slate-300">{{ t('welcome.live_title') }}</p>
-                    <h3 class="mt-2 text-2xl font-semibold">{{ t('welcome.live_subtitle') }}</h3>
+                <aside class="preview-wrap">
+                    <div class="preview-overlay" />
+                    <div class="preview-card">
+                        <div class="preview-head">
+                            <div>
+                                <p class="preview-kicker">Live dashboard</p>
+                                <h3>Vue instantanée</h3>
+                            </div>
+                            <span class="live-dot">Live</span>
+                        </div>
 
-                    <div class="mt-5 space-y-2">
-                        <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
-                            <div class="mb-1 flex items-center justify-between text-xs text-slate-300">
-                                <span>{{ t('welcome.live_item_1') }}</span>
-                                <span class="mono">42</span>
-                            </div>
-                            <div class="progress-track bg-slate-700/90">
-                                <div class="progress-fill bg-sky-400" style="width: 68%" />
-                            </div>
-                        </div>
-                        <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
-                            <div class="mb-1 flex items-center justify-between text-xs text-slate-300">
-                                <span>{{ t('welcome.live_item_2') }}</span>
-                                <span class="mono">18</span>
-                            </div>
-                            <div class="progress-track bg-slate-700/90">
-                                <div class="progress-fill bg-amber-400" style="width: 52%" />
-                            </div>
-                        </div>
-                        <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
-                            <div class="mb-1 flex items-center justify-between text-xs text-slate-300">
-                                <span>{{ t('welcome.live_item_3') }}</span>
-                                <span class="mono">€ 64k</span>
-                            </div>
-                            <div class="progress-track bg-slate-700/90">
-                                <div class="progress-fill bg-emerald-400" style="width: 84%" />
-                            </div>
-                        </div>
-                        <div class="insight-item border-slate-700 bg-slate-800/80 text-slate-100">
-                            <div class="mb-1 flex items-center justify-between text-xs text-slate-300">
-                                <span>{{ t('welcome.live_item_4') }}</span>
-                                <span class="mono">99.95%</span>
-                            </div>
-                            <div class="progress-track bg-slate-700/90">
-                                <div class="progress-fill bg-indigo-400" style="width: 96%" />
-                            </div>
+                        <div class="preview-metrics">
+                            <article
+                                v-for="metric in dashboardPreviewMetrics"
+                                :key="metric.label"
+                                class="preview-metric"
+                            >
+                                <div class="preview-metric-head">
+                                    <span>{{ metric.label }}</span>
+                                    <strong>{{ metric.value }}</strong>
+                                </div>
+                                <div class="preview-track">
+                                    <div class="preview-fill" :class="metric.tone" :style="{ '--progress': `${metric.progress}%` }" />
+                                </div>
+                            </article>
                         </div>
                     </div>
-
-                    <p class="mt-4 text-xs text-slate-300">
-                        {{ t('welcome.live_note') }}
-                    </p>
                 </aside>
             </section>
 
-            <section class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <article v-for="item in statCards" :key="item.label" class="surface-card reveal reveal-delay-2 panel-hover p-4">
-                    <p class="tiny-muted">{{ item.label }}</p>
-                    <p class="mt-2 text-2xl font-bold text-slate-900">{{ item.value }}</p>
-                    <p class="mt-1 text-xs text-slate-500">{{ item.note }}</p>
-                    <div class="progress-track mt-3">
-                        <div class="progress-fill" :class="item.tone" :style="{ width: `${item.bar}%` }" />
-                    </div>
-                </article>
+            <section class="social-proof reveal-node" :ref="registerReveal">
+                <p>Équipes qui opèrent déjà avec Support & Paiements</p>
+                <div class="social-grid">
+                    <span v-for="name in socialProof" :key="name">{{ name }}</span>
+                </div>
             </section>
 
-            <section class="mt-8" id="features">
-                <div class="mb-4">
-                    <p class="section-kicker">{{ t('welcome.modules_title') }}</p>
-                    <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.modules_subtitle') }}</h3>
-                </div>
+            <section id="features" class="features-section reveal-node" :ref="registerReveal">
+                <header>
+                    <p class="section-kicker">Fonctionnalités clés</p>
+                    <h2>Un design système pensé pour l’exécution.</h2>
+                </header>
 
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <article v-for="module in moduleCards" :key="module.title" class="surface-card reveal panel-hover p-5">
-                        <div class="mb-3 inline-flex rounded-xl bg-slate-900 p-2 text-white">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path :d="module.icon" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <h4 class="text-sm font-semibold text-slate-900">{{ module.title }}</h4>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ module.description }}</p>
+                <div class="features-grid">
+                    <article v-for="feature in featureCards" :key="feature.title" class="feature-card">
+                        <span class="feature-icon">{{ feature.icon }}</span>
+                        <h3>{{ feature.title }}</h3>
+                        <p>{{ feature.description }}</p>
                     </article>
                 </div>
             </section>
 
-            <section class="mt-8">
-                <div class="mb-4">
-                    <p class="section-kicker">{{ t('welcome.why_title') }}</p>
-                    <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.why_subtitle') }}</h3>
-                </div>
+            <section id="workflow" class="workflow-section reveal-node" :ref="registerReveal">
+                <header>
+                    <p class="section-kicker">Comment ça marche</p>
+                    <h2>De l’incident à la résolution, sans friction.</h2>
+                </header>
 
-                <div class="grid gap-4 md:grid-cols-3">
-                    <article v-for="item in whyItems" :key="item.title" class="surface-card reveal panel-hover p-5">
-                        <h4 class="text-base font-semibold text-slate-900">{{ item.title }}</h4>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ item.description }}</p>
+                <div class="workflow-grid">
+                    <article v-for="(step, index) in workflowSteps" :key="step.title" class="workflow-step">
+                        <span class="step-index">0{{ index + 1 }}</span>
+                        <h3>{{ step.title }}</h3>
+                        <p>{{ step.description }}</p>
                     </article>
                 </div>
             </section>
 
-            <section class="mt-8 space-y-4" id="operations">
-                <article class="surface-card reveal p-6">
-                    <div class="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-                        <div>
-                            <p class="section-kicker">{{ t('welcome.tickets_block_title') }}</p>
-                            <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.tickets_block_subtitle') }}</h3>
-                            <ul class="mt-4 space-y-2">
-                                <li v-for="item in ticketItems" :key="item" class="insight-item flex items-start gap-3">
-                                    <span class="data-dot mt-1 bg-sky-500" />
-                                    <span>{{ item }}</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="surface-card-soft p-4">
-                            <p class="tiny-muted">{{ t('welcome.tickets_block_card_title') }}</p>
-                            <div class="mt-3 space-y-2">
-                                <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                                    <span>{{ t('welcome.tickets_block_card_line_1') }}</span><span class="mono">14</span>
-                                </div>
-                                <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                                    <span>{{ t('welcome.tickets_block_card_line_2') }}</span><span class="mono">8</span>
-                                </div>
-                                <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                                    <span>{{ t('welcome.tickets_block_card_line_3') }}</span><span class="mono">96%</span>
-                                </div>
-                            </div>
-                            <p class="mt-3 text-xs text-slate-500">{{ t('welcome.tickets_block_card_note') }}</p>
-                        </div>
-                    </div>
-                </article>
+            <section id="stats" class="stats-section reveal-node" :ref="registerReveal">
+                <header>
+                    <p class="section-kicker">Indicateurs</p>
+                    <h2>Performance opérationnelle lisible en un regard.</h2>
+                </header>
 
-                <article class="surface-card reveal p-6">
-                    <div class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-                        <div class="surface-card-soft p-4">
-                            <p class="tiny-muted">{{ t('welcome.payments_block_card_title') }}</p>
-                            <div class="mt-3 space-y-2">
-                                <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                                    <span>{{ t('welcome.payments_block_card_line_1') }}</span><span class="mono">€ 52k</span>
-                                </div>
-                                <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                                    <span>{{ t('welcome.payments_block_card_line_2') }}</span><span class="mono">3.2%</span>
-                                </div>
-                                <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm text-slate-700">
-                                    <span>{{ t('welcome.payments_block_card_line_3') }}</span><span class="mono">11m</span>
-                                </div>
-                            </div>
-                            <p class="mt-3 text-xs text-slate-500">{{ t('welcome.payments_block_card_note') }}</p>
-                        </div>
-                        <div>
-                            <p class="section-kicker">{{ t('welcome.payments_block_title') }}</p>
-                            <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.payments_block_subtitle') }}</h3>
-                            <ul class="mt-4 space-y-2">
-                                <li v-for="item in paymentItems" :key="item" class="insight-item flex items-start gap-3">
-                                    <span class="data-dot mt-1 bg-emerald-500" />
-                                    <span>{{ item }}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </article>
-            </section>
-
-            <section class="mt-8" id="security">
-                <article class="surface-card reveal p-6">
-                    <div class="grid gap-5 lg:grid-cols-[1fr_360px]">
-                        <div>
-                            <p class="section-kicker">{{ t('welcome.security_block_title') }}</p>
-                            <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.security_block_subtitle') }}</h3>
-                            <ul class="mt-4 grid gap-2 md:grid-cols-2">
-                                <li v-for="item in securityItems" :key="item" class="insight-item flex items-start gap-3">
-                                    <span class="data-dot mt-1 bg-indigo-500" />
-                                    <span>{{ item }}</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="surface-card-soft p-4">
-                            <p class="tiny-muted">{{ t('welcome.security_block_card_title') }}</p>
-                            <div class="mt-3 space-y-2">
-                                <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                                    {{ t('welcome.security_block_card_line_1') }}
-                                </div>
-                                <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                                    {{ t('welcome.security_block_card_line_2') }}
-                                </div>
-                                <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                                    {{ t('welcome.security_block_card_line_3') }}
-                                </div>
-                            </div>
-                            <p class="mt-3 text-xs text-slate-500">{{ t('welcome.security_block_card_note') }}</p>
-                        </div>
-                    </div>
-                </article>
-            </section>
-
-            <section class="mt-8 surface-card reveal p-6 sm:p-8">
-                <div class="mb-4">
-                    <p class="section-kicker">{{ t('welcome.workflow_title') }}</p>
-                    <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.workflow_subtitle') }}</h3>
-                </div>
-
-                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <article v-for="(step, index) in workflowSteps" :key="step.title" class="surface-card-soft panel-hover p-4">
-                        <span class="mono inline-flex rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs font-semibold text-slate-700">
-                            {{ index + 1 }}
-                        </span>
-                        <h4 class="mt-3 text-sm font-semibold text-slate-900">{{ step.title }}</h4>
-                        <p class="mt-1 text-sm text-slate-600">{{ step.description }}</p>
+                <div class="stats-grid">
+                    <article v-for="stat in statsCards" :key="stat.label" class="stat-card">
+                        <p>{{ stat.label }}</p>
+                        <strong>{{ stat.value }}</strong>
+                        <span>{{ stat.note }}</span>
                     </article>
                 </div>
             </section>
 
-            <section class="mt-8" id="benefits">
-                <div class="mb-4">
-                    <p class="section-kicker">{{ t('welcome.benefits_title') }}</p>
-                    <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.benefits_subtitle') }}</h3>
+            <section id="cta" class="final-cta reveal-node" :ref="registerReveal">
+                <div>
+                    <p class="section-kicker">Prêt à déployer</p>
+                    <h2>Transformez vos opérations support et paiement.</h2>
+                    <p>
+                        Lancez un espace premium, sécurisé et orienté résultats pour vos équipes support, finance et produit.
+                    </p>
                 </div>
 
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <article v-for="item in benefitItems" :key="item.title" class="surface-card reveal panel-hover p-5">
-                        <h4 class="text-sm font-semibold text-slate-900">{{ item.title }}</h4>
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ item.description }}</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="mt-8" id="faq">
-                <div class="mb-4">
-                    <p class="section-kicker">{{ t('welcome.faq_title') }}</p>
-                    <h3 class="mt-2 text-2xl font-bold text-slate-900">{{ t('welcome.faq_subtitle') }}</h3>
-                </div>
-
-                <div class="grid gap-3 lg:grid-cols-2">
-                    <details v-for="faq in faqItems" :key="faq.question" class="faq-item reveal">
-                        <summary>{{ faq.question }}</summary>
-                        <p>{{ faq.answer }}</p>
-                    </details>
+                <div class="final-cta-actions">
+                    <Link v-if="canLogin" :href="route('login')" class="btn btn-primary btn-xl">
+                        {{ t('welcome.cta_login', 'Accéder à l’espace') }}
+                    </Link>
+                    <Link v-if="canRegister" :href="route('register')" class="btn btn-ghost btn-xl">
+                        {{ t('welcome.cta_register', 'Créer un compte') }}
+                    </Link>
                 </div>
             </section>
-
-            <section class="mt-8 surface-card reveal p-6 text-center sm:p-8">
-                <h3 class="text-2xl font-bold tracking-tight text-slate-900">{{ t('welcome.final_title') }}</h3>
-                <p class="mx-auto mt-3 max-w-3xl text-sm text-slate-600 sm:text-base">
-                    {{ t('welcome.final_subtitle') }}
-                </p>
-
-                <div class="mt-6 flex flex-wrap justify-center gap-2">
-                    <Link v-if="canLogin" :href="route('login')" class="btn-primary">{{ t('welcome.cta_login') }}</Link>
-                    <Link v-if="canRegister" :href="route('register')" class="btn-secondary">{{ t('welcome.cta_register') }}</Link>
-                </div>
-            </section>
-
-            <footer class="mt-8 surface-card reveal p-6">
-                <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-900">{{ t('app_name') }}</h4>
-                        <p class="mt-2 text-sm text-slate-600">{{ t('welcome.footer_tagline') }}</p>
-                        <p class="mt-3 text-xs text-slate-500">Laravel {{ laravelVersion }} • PHP {{ phpVersion }}</p>
-                    </div>
-
-                    <div>
-                        <p class="tiny-muted">{{ t('welcome.footer_col_product') }}</p>
-                        <ul class="mt-2 space-y-1 text-sm text-slate-600">
-                            <li>{{ t('welcome.footer_link_dashboard') }}</li>
-                            <li>{{ t('welcome.footer_link_tickets') }}</li>
-                            <li>{{ t('welcome.footer_link_payments') }}</li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <p class="tiny-muted">{{ t('welcome.footer_col_resources') }}</p>
-                        <ul class="mt-2 space-y-1 text-sm text-slate-600">
-                            <li>{{ t('welcome.footer_link_api') }}</li>
-                            <li>{{ t('welcome.footer_link_security') }}</li>
-                            <li>{{ t('welcome.footer_link_docs') }}</li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <p class="tiny-muted">{{ t('welcome.footer_col_company') }}</p>
-                        <ul class="mt-2 space-y-1 text-sm text-slate-600">
-                            <li>{{ t('welcome.footer_link_about') }}</li>
-                            <li>{{ t('welcome.footer_link_status') }}</li>
-                            <li>{{ t('welcome.footer_link_contact') }}</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="mt-6 border-t border-slate-200 pt-4 text-xs text-slate-500">
-                    {{ t('welcome.footer_rights') }}
-                </div>
-            </footer>
         </div>
     </div>
 </template>
+
+<style scoped>
+.landing-saas {
+    --primary: #4f46e5;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --title: #111827;
+    --body: #374151;
+    --secondary: #6b7280;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--body);
+    position: relative;
+    overflow: hidden;
+    padding: 32px 20px 64px;
+}
+
+.landing-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(17, 24, 39, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 24, 39, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: radial-gradient(circle at 50% 12%, rgba(0, 0, 0, 0.9) 32%, transparent 82%);
+    pointer-events: none;
+}
+
+.landing-glow {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(58px);
+    pointer-events: none;
+}
+
+.landing-glow-left {
+    width: 340px;
+    height: 340px;
+    top: -130px;
+    left: -110px;
+    background: rgba(79, 70, 229, 0.22);
+}
+
+.landing-glow-right {
+    width: 360px;
+    height: 360px;
+    top: -90px;
+    right: -130px;
+    background: rgba(56, 189, 248, 0.2);
+}
+
+.container-shell {
+    width: min(1200px, 100%);
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 28px;
+}
+
+.top-nav {
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 14px;
+}
+
+.brand {
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(140deg, #4338ca, var(--primary));
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: 0 8px 20px -10px rgba(79, 70, 229, 0.7);
+}
+
+.brand-kicker {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--secondary);
+    font-weight: 700;
+}
+
+.brand-title {
+    font-size: 25px;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--title);
+    letter-spacing: -0.02em;
+}
+
+.nav-center {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 10px;
+    padding: 3px;
+}
+
+.nav-link {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--secondary);
+    text-decoration: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: all 180ms ease;
+}
+
+.nav-link:hover {
+    color: var(--title);
+    background: #f3f4f6;
+}
+
+.nav-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.locale-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 10px;
+    padding: 3px;
+}
+
+.locale-pill {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--secondary);
+    text-decoration: none;
+    padding: 7px 9px;
+    border-radius: 7px;
+    transition: all 180ms ease;
+}
+
+.locale-pill:hover {
+    background: #f3f4f6;
+    color: var(--title);
+}
+
+.locale-pill.is-active {
+    background: #111827;
+    color: #fff;
+}
+
+.btn {
+    border-radius: 8px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px) scale(1.01);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4338ca, var(--primary));
+    color: #fff;
+    box-shadow: 0 12px 22px -14px rgba(79, 70, 229, 0.9);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 18px 28px -16px rgba(79, 70, 229, 0.95);
+}
+
+.btn-ghost {
+    background: #fff;
+    border-color: var(--border);
+    color: var(--title);
+}
+
+.btn-ghost:hover {
+    background: #f3f4f6;
+}
+
+.btn-xl {
+    min-width: 180px;
+    min-height: 44px;
+}
+
+.hero-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 22px;
+    align-items: stretch;
+}
+
+.hero-copy {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 22px 42px -30px rgba(17, 24, 39, 0.28);
+    padding: 36px;
+}
+
+.hero-pill {
+    display: inline-flex;
+    border-radius: 999px;
+    border: 1px solid rgba(79, 70, 229, 0.22);
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 12px;
+}
+
+.hero-copy h1 {
+    margin-top: 16px;
+    color: var(--title);
+    font-size: clamp(36px, 5vw, 58px);
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+    max-width: 12ch;
+}
+
+.hero-copy h1 span {
+    display: block;
+}
+
+.hero-copy p {
+    margin-top: 16px;
+    max-width: 56ch;
+    font-size: 16px;
+    color: var(--body);
+}
+
+.hero-ctas {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.preview-wrap {
+    position: relative;
+    border: 1px solid #dbe2ff;
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 84% 12%, rgba(79, 70, 229, 0.28), rgba(79, 70, 229, 0) 58%),
+        linear-gradient(165deg, #131a29 0%, #1f2b44 100%);
+    box-shadow: 0 24px 46px -32px rgba(15, 23, 42, 0.65);
+    overflow: hidden;
+    min-height: 420px;
+    padding: 26px;
+}
+
+.preview-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.1), rgba(2, 6, 23, 0.5));
+    pointer-events: none;
+}
+
+.preview-card {
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.45);
+    padding: 16px;
+}
+
+.preview-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.preview-kicker {
+    color: #93c5fd;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.preview-head h3 {
+    color: #f8fafc;
+    font-size: 24px;
+    line-height: 1.1;
+    margin-top: 4px;
+    letter-spacing: -0.02em;
+}
+
+.live-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.live-dot::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #34d399;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+    animation: pulse-live 1.8s infinite;
+}
+
+.preview-metrics {
+    display: grid;
+    gap: 10px;
+}
+
+.preview-metric {
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.55);
+    padding: 12px;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.preview-metric:hover {
+    transform: translateY(-1px);
+    border-color: rgba(148, 163, 184, 0.45);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.preview-metric-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+}
+
+.preview-metric-head span {
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.preview-metric-head strong {
+    color: #ffffff;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+}
+
+.preview-track {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.28);
+    overflow: hidden;
+}
+
+.preview-fill {
+    height: 100%;
+    border-radius: 999px;
+    width: var(--progress);
+    transform-origin: left;
+    animation: fill-grow 1000ms ease both;
+}
+
+.tone-primary {
+    background: linear-gradient(90deg, #4f46e5, #818cf8);
+}
+
+.tone-danger {
+    background: linear-gradient(90deg, #ef4444, #fb7185);
+}
+
+.tone-success {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.tone-info {
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+}
+
+.social-proof {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    padding: 22px 26px;
+}
+
+.social-proof > p {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--secondary);
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.social-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.social-grid span {
+    min-height: 52px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.social-grid span:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.features-section,
+.workflow-section,
+.stats-section,
+.final-cta {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 16px 30px -28px rgba(15, 23, 42, 0.34);
+    padding: 34px;
+}
+
+.section-kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--secondary);
+    font-weight: 700;
+}
+
+.features-section h2,
+.workflow-section h2,
+.stats-section h2,
+.final-cta h2 {
+    margin-top: 10px;
+    color: var(--title);
+    font-size: clamp(28px, 3.8vw, 42px);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    max-width: 16ch;
+}
+
+.features-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.feature-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+    padding: 20px;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    border-color: #d0d9ff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(79, 70, 229, 0.12);
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.feature-card h3 {
+    color: var(--title);
+    font-size: 17px;
+    letter-spacing: -0.01em;
+}
+
+.feature-card p {
+    margin-top: 8px;
+    color: var(--secondary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.workflow-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.workflow-step {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+    padding: 18px;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.workflow-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.step-index {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    padding: 4px 10px;
+}
+
+.workflow-step h3 {
+    margin-top: 12px;
+    color: var(--title);
+    font-size: 15px;
+    letter-spacing: -0.01em;
+}
+
+.workflow-step p {
+    margin-top: 8px;
+    color: var(--secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.stats-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.stat-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+    padding: 18px;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card p {
+    font-size: 12px;
+    color: var(--secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.stat-card strong {
+    display: block;
+    margin-top: 10px;
+    font-size: 32px;
+    color: var(--title);
+    line-height: 1;
+    letter-spacing: -0.03em;
+}
+
+.stat-card span {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--secondary);
+}
+
+.final-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 22px;
+}
+
+.final-cta p {
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--secondary);
+    max-width: 56ch;
+}
+
+.final-cta-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.reveal-node {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.reveal-node.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes pulse-live {
+    70% {
+        box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    }
+}
+
+@keyframes fill-grow {
+    from {
+        transform: scaleX(0.25);
+        opacity: 0.5;
+    }
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 1100px) {
+    .hero-section {
+        grid-template-columns: 1fr;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .workflow-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .social-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .final-cta {
+        grid-template-columns: 1fr;
+    }
+
+    .final-cta-actions {
+        justify-content: flex-start;
+    }
+
+    .nav-center {
+        display: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .landing-saas {
+        padding-inline: 14px;
+    }
+
+    .top-nav {
+        flex-wrap: wrap;
+    }
+
+    .nav-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .hero-copy,
+    .features-section,
+    .workflow-section,
+    .stats-section,
+    .final-cta {
+        padding: 24px;
+    }
+
+    .features-grid,
+    .workflow-grid,
+    .stats-grid,
+    .social-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .brand-title {
+        font-size: 21px;
+    }
+
+    .hero-copy h1 {
+        font-size: clamp(34px, 12vw, 46px);
+    }
+}
+</style>
