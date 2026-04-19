@@ -132,12 +132,36 @@ upsert_env() {
     fi
 }
 
+ensure_env() {
+    local key="$1"
+    local value="$2"
+
+    if ! grep -q "^${key}=" .env; then
+        echo "${key}=${value}" >> .env
+    fi
+}
+
+get_env_value() {
+    local key="$1"
+    local value=""
+
+    value="$(awk -F= -v k="$key" '$1==k{print substr($0, index($0, "=")+1); exit}' .env)"
+    echo "$value"
+}
+
 if [ ! -f .env ]; then
     cp .env.example .env
     echo ".env cree depuis .env.example"
 fi
 
-upsert_env "APP_URL" "http://localhost"
+ensure_env "APP_HTTP_PORT" "8000"
+if ! grep -q '^APP_URL=' .env; then
+    DEFAULT_HTTP_PORT="$(get_env_value APP_HTTP_PORT)"
+    if [ -z "$DEFAULT_HTTP_PORT" ]; then
+        DEFAULT_HTTP_PORT="8000"
+    fi
+    ensure_env "APP_URL" "http://localhost:${DEFAULT_HTTP_PORT}"
+fi
 upsert_env "APP_LOCALE" "fr"
 upsert_env "APP_FALLBACK_LOCALE" "fr"
 upsert_env "DB_CONNECTION" "mysql"
@@ -164,6 +188,16 @@ if ! grep -q '^APP_KEY=base64:' .env; then
         APP_KEY_VALUE="base64:$(head -c 32 /dev/urandom | base64 | tr -d '\n')"
     fi
     upsert_env "APP_KEY" "$APP_KEY_VALUE"
+fi
+
+APP_HTTP_PORT_VALUE="$(get_env_value APP_HTTP_PORT)"
+if [ -z "$APP_HTTP_PORT_VALUE" ]; then
+    APP_HTTP_PORT_VALUE="8000"
+fi
+LOCAL_APP_URL="http://localhost:${APP_HTTP_PORT_VALUE}"
+PUBLIC_APP_URL="$(get_env_value APP_URL)"
+if [ -z "$PUBLIC_APP_URL" ]; then
+    PUBLIC_APP_URL="$LOCAL_APP_URL"
 fi
 
 echo "Reinitialisation des conteneurs/volumes du projet..."
@@ -228,9 +262,9 @@ lartisan event:clear
 lartisan view:clear || true
 
 if command -v curl >/dev/null 2>&1; then
-    HTTP_CODE="$(curl -s -o /tmp/tp-final-start-response.html -w '%{http_code}' http://localhost:8000 || true)"
+    HTTP_CODE="$(curl -s -o /tmp/tp-final-start-response.html -w '%{http_code}' "${LOCAL_APP_URL}" || true)"
     if [ -z "$HTTP_CODE" ] || [ "$HTTP_CODE" -ge 400 ]; then
-        echo "La page http://localhost:8000 ne repond pas encore."
+        echo "La page ${LOCAL_APP_URL} ne repond pas encore."
         echo "HTTP code: ${HTTP_CODE:-unknown}"
         echo "Logs utiles:"
         dcompose logs --tail=80 nginx app || true
@@ -240,8 +274,9 @@ if command -v curl >/dev/null 2>&1; then
 fi
 
 echo
-echo "Application prete : http://localhost:8000"
+echo "Application prete (local): ${LOCAL_APP_URL}"
+echo "APP_URL: ${PUBLIC_APP_URL}"
 echo "Admin : admin@example.com / password"
 echo "User  : user@example.com / password"
 
-open_browser "http://localhost:8000/"
+open_browser "${LOCAL_APP_URL}/"

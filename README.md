@@ -164,9 +164,55 @@ docker compose exec --user www-data app php artisan migrate --seed
 
 Application web: `http://localhost:8000`
 
+Port HTTP Docker configurable via `.env`:
+```env
+APP_HTTP_PORT=8000
+```
+Exemple serveur multi-projets:
+```env
+APP_HTTP_PORT=8003
+APP_URL=https://tp-final.teo-infra.fr
+```
+
 Services:
 - MySQL: `localhost:3307`
 - MongoDB: `localhost:27017`
+
+### Déploiement domaine (reverse proxy Nginx hôte)
+1. Démarrer l’app sur un port local dédié (ex. `8003`) dans `.env`:
+```env
+APP_HTTP_PORT=8003
+APP_URL=https://tp-final.teo-infra.fr
+```
+
+2. Relancer:
+```bash
+./start.sh
+```
+
+3. Créer le vhost Nginx hôte:
+```nginx
+server {
+    listen 80;
+    server_name tp-final.teo-infra.fr;
+
+    location / {
+        proxy_pass http://127.0.0.1:8003;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+Exemple prêt à copier: `docs/deploy/nginx/tp-final.teo-infra.fr.conf`
+
+4. Activer et sécuriser HTTPS:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+sudo certbot --nginx -d tp-final.teo-infra.fr
+```
 
 ### Depannage rapide (HTTP 500 "Please provide a valid cache path")
 ```bash
