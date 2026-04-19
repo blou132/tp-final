@@ -18,6 +18,14 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    priorities: {
+        type: Array,
+        default: () => [],
+    },
+    categories: {
+        type: Array,
+        default: () => [],
+    },
     filters: {
         type: Object,
         required: true,
@@ -31,7 +39,9 @@ const props = defineProps({
 const { t, locale } = useI18n();
 
 const selectedStatus = ref(props.filters.status ?? '');
-const searchQuery = ref('');
+const selectedPriority = ref(props.filters.priority ?? '');
+const selectedCategory = ref(props.filters.category ?? '');
+const searchQuery = ref(props.filters.q ?? '');
 const sortBy = ref('newest');
 const deletingTicket = ref(null);
 
@@ -47,6 +57,9 @@ const applyFilters = () => {
         route('tickets.index'),
         {
             status: selectedStatus.value || undefined,
+            priority: selectedPriority.value || undefined,
+            category: selectedCategory.value || undefined,
+            q: searchQuery.value.trim() || undefined,
         },
         {
             preserveState: true,
@@ -57,6 +70,8 @@ const applyFilters = () => {
 
 const resetFilters = () => {
     selectedStatus.value = '';
+    selectedPriority.value = '';
+    selectedCategory.value = '';
     searchQuery.value = '';
     sortBy.value = 'newest';
 
@@ -90,6 +105,14 @@ const rows = computed(() => {
 
     if (selectedStatus.value) {
         collection = collection.filter((ticket) => ticket.status === selectedStatus.value);
+    }
+
+    if (selectedPriority.value) {
+        collection = collection.filter((ticket) => ticket.priority === selectedPriority.value);
+    }
+
+    if (selectedCategory.value) {
+        collection = collection.filter((ticket) => ticket.category === selectedCategory.value);
     }
 
     if (query) {
@@ -160,7 +183,37 @@ const freshCount = computed(() =>
 );
 
 const highImpactCount = computed(() =>
-    rows.value.filter((ticket) => ticket.is_flagged || getAgeHours(ticket) >= 72).length,
+    rows.value.filter((ticket) => ticket.is_flagged || ticket.priority === 'urgent').length,
+);
+
+const overdueCount = computed(() =>
+    rows.value.filter(
+        (ticket) =>
+            ticket.due_at &&
+            ['open', 'in_progress'].includes(ticket.status) &&
+            new Date(ticket.due_at).getTime() < Date.now(),
+    ).length,
+);
+
+const dueTodayCount = computed(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const day = today.getDate();
+
+    return rows.value.filter((ticket) => {
+        if (!ticket.due_at || ticket.status === 'closed') {
+            return false;
+        }
+
+        const due = new Date(ticket.due_at);
+
+        return due.getFullYear() === year && due.getMonth() === month && due.getDate() === day;
+    }).length;
+});
+
+const unassignedCount = computed(() =>
+    rows.value.filter((ticket) => ['open', 'in_progress'].includes(ticket.status) && !ticket.assignee?.id).length,
 );
 
 const statusBreakdown = computed(() => {
@@ -224,17 +277,19 @@ const excerpt = (value) => {
 };
 
 const priorityInfo = (ticket) => {
-    const ageHours = getAgeHours(ticket);
-
-    if (ticket.is_flagged || ageHours >= 72) {
-        return { label: t('tickets.priority_critical'), className: 'bg-rose-50 text-rose-700 ring-rose-200' };
+    if (ticket.priority === 'urgent') {
+        return { label: t('ticket_priority.urgent'), className: 'bg-rose-50 text-rose-700 ring-rose-200' };
     }
 
-    if (ticket.status === 'open' && ageHours >= 36) {
-        return { label: t('tickets.priority_high'), className: 'bg-amber-50 text-amber-700 ring-amber-200' };
+    if (ticket.priority === 'high') {
+        return { label: t('ticket_priority.high'), className: 'bg-amber-50 text-amber-700 ring-amber-200' };
     }
 
-    return { label: t('tickets.priority_normal'), className: 'bg-slate-100 text-slate-700 ring-slate-200' };
+    if (ticket.priority === 'low') {
+        return { label: t('ticket_priority.low'), className: 'bg-sky-50 text-sky-700 ring-sky-200' };
+    }
+
+    return { label: t('ticket_priority.medium'), className: 'bg-slate-100 text-slate-700 ring-slate-200' };
 };
 </script>
 
@@ -248,9 +303,14 @@ const priorityInfo = (ticket) => {
                     <h2 class="page-title">{{ t('tickets.title') }}</h2>
                     <p class="page-subtitle">{{ t('tickets.list_subtitle') }}</p>
                 </div>
-                <Link v-if="can.create" :href="route('tickets.create')" class="btn-primary">
-                    {{ t('tickets.new') }}
-                </Link>
+                <div class="flex flex-wrap gap-2">
+                    <Link v-if="can.export" :href="route('tickets.export', filters)" class="btn-secondary">
+                        {{ t('common.export_csv') }}
+                    </Link>
+                    <Link v-if="can.create" :href="route('tickets.create')" class="btn-primary">
+                        {{ t('tickets.new') }}
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -285,6 +345,35 @@ const priorityInfo = (ticket) => {
             />
         </div>
 
+        <div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('tickets.priority_label') }}</label>
+                <select v-model="selectedPriority" class="select-base">
+                    <option value="">{{ t('common.all') }}</option>
+                    <option v-for="priority in priorities" :key="priority" :value="priority">
+                        {{ t(`ticket_priority.${priority}`, priority) }}
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('tickets.category_label') }}</label>
+                <select v-model="selectedCategory" class="select-base">
+                    <option value="">{{ t('common.all') }}</option>
+                    <option v-for="category in categories" :key="category" :value="category">
+                        {{ t(`ticket_category.${category}`, category) }}
+                    </option>
+                </select>
+            </div>
+            <div class="surface-card-soft px-3 py-2.5 text-sm">
+                <p class="tiny-muted">{{ t('tickets.due_today') }}</p>
+                <p class="mono mt-1 text-slate-800">{{ dueTodayCount }}</p>
+            </div>
+            <div class="surface-card-soft px-3 py-2.5 text-sm">
+                <p class="tiny-muted">{{ t('tickets.overdue') }}</p>
+                <p class="mono mt-1 text-rose-700">{{ overdueCount }}</p>
+            </div>
+        </div>
+
         <div class="mt-4 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_340px]">
             <div>
                 <div class="table-shell reveal">
@@ -316,6 +405,11 @@ const priorityInfo = (ticket) => {
                                         {{ ticket.title }}
                                     </p>
                                     <p class="mt-1 text-xs text-slate-500">{{ excerpt(ticket.description) }}</p>
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        {{ t(`ticket_category.${ticket.category}`, ticket.category) }}
+                                        • {{ ticket.assignee?.email ?? t('tickets.unassigned') }}
+                                        • {{ ticket.due_at ? formatDate(ticket.due_at) : t('tickets.no_due_date') }}
+                                    </p>
                                     <p class="mt-1 text-xs text-slate-400 2xl:hidden">
                                         {{ ticket.user?.email ?? '-' }} • {{ formatDate(ticket.created_at) }}
                                     </p>
@@ -408,6 +502,14 @@ const priorityInfo = (ticket) => {
                 <SectionCard :title="t('tickets.aging_title')" :description="t('tickets.aging_hint')">
                     <div class="space-y-2">
                         <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('tickets.due_today') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ dueTodayCount }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('tickets.overdue') }}</span>
+                            <span class="mono text-xs text-rose-700">{{ overdueCount }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
                             <span class="text-sm text-slate-700">{{ t('tickets.fresh_count') }}</span>
                             <span class="mono text-xs text-slate-500">{{ freshCount }}</span>
                         </div>
@@ -418,6 +520,10 @@ const priorityInfo = (ticket) => {
                         <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
                             <span class="text-sm text-slate-700">{{ t('tickets.high_impact') }}</span>
                             <span class="mono text-xs text-slate-500">{{ highImpactCount }}</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                            <span class="text-sm text-slate-700">{{ t('tickets.unassigned') }}</span>
+                            <span class="mono text-xs text-slate-500">{{ unassignedCount }}</span>
                         </div>
                     </div>
                 </SectionCard>

@@ -43,7 +43,13 @@ Statuts:
   - formulaires CRUD structurés + feedbacks visuels.
 - Dashboard avec statistiques Tickets/Paiements.
 - CRUD Tickets (web) avec filtres.
+- Tickets enrichis pour un usage métier:
+  - priorité (`low`, `medium`, `high`, `urgent`),
+  - catégorie (`general`, `technical`, `billing`, `account`),
+  - échéance (`due_at`),
+  - assignation (`assigned_to`) réservée admin.
 - CRUD Payments (web) avec filtres.
+- Export CSV Tickets/Paiements avec respect des droits de visibilité.
 - Profanity filter sur `title` + `description` de Ticket.
 - Gestion de rôles:
   - `admin`
@@ -58,17 +64,18 @@ Statuts:
 - Audit MongoDB des actions principales:
   - `ticket.created`, `ticket.updated`, `ticket.deleted`
   - `payment.created`, `payment.updated`, `payment.deleted`
+- Page dédiée "Journal d’activité" (MongoDB) avec filtres (entité/action/acteur admin) et fallback propre si source indisponible.
 
 ## 5. Architecture applicative
 - **Models**: `User`, `Ticket`, `Payment`, `ActivityLog` (MongoDB).
-- **Enums**: `TicketStatus`, `PaymentStatus`.
+- **Enums**: `TicketStatus`, `TicketPriority`, `TicketCategory`, `PaymentStatus`.
 - **Requests**: validation dédiée pour create/update Ticket/Payment.
 - **Policies**: `TicketPolicy`, `PaymentPolicy`.
 - **Services**:
   - `ProfanityFilterService`
   - `ActivityLogService`
 - **Controllers**:
-  - Web: Dashboard, Tickets, Payments, Locale, Auth/Profile
+  - Web: Dashboard, Tickets, Payments, Activities, Locale, Auth/Profile
   - API: `TicketApiController`
 - **Frontend Vue**:
   - pages Dashboard/Tickets/Payments
@@ -204,6 +211,8 @@ php artisan test
 Couverture incluse:
 - unit tests (`ProfanityFilterService`),
 - feature tests CRUD/auth/profile,
+- feature tests exports CSV et règles d’assignation tickets,
+- feature test d’accès à la page activité,
 - API tests endpoints avancés.
 
 ## 11. API avancée Tickets

@@ -4,6 +4,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
+LOCAL_UID="$(id -u)"
+LOCAL_GID="$(id -g)"
 
 if ! command -v docker >/dev/null 2>&1; then
     echo "Docker n'est pas installe."
@@ -35,12 +37,60 @@ build_frontend_assets() {
     echo "Build des assets frontend..."
 
     "${DOCKER_CMD[@]}" run --rm \
-        --user "$(id -u):$(id -g)" \
+        -v "${ROOT_DIR}:/app" \
+        -w /app \
+        node:22 \
+        sh -lc "mkdir -p /app/node_modules /app/public/build \
+            && rm -rf /app/public/build/* \
+            && chown -R ${LOCAL_UID}:${LOCAL_GID} /app/node_modules /app/public/build 2>/dev/null || true"
+
+    "${DOCKER_CMD[@]}" run --rm \
+        --user "${LOCAL_UID}:${LOCAL_GID}" \
         -e npm_config_cache=/tmp/npm-cache \
         -v "${ROOT_DIR}:/app" \
         -w /app \
         node:22 \
         sh -lc 'npm ci && npm run build'
+}
+
+fix_node_modules_permissions() {
+    local paths=()
+
+    if [ -e "${ROOT_DIR}/node_modules" ]; then
+        paths+=("${ROOT_DIR}/node_modules")
+    fi
+
+    if [ -e "${ROOT_DIR}/public/build" ]; then
+        paths+=("${ROOT_DIR}/public/build")
+    fi
+
+    if [ "${#paths[@]}" -eq 0 ]; then
+        return
+    fi
+
+    local needs_fix=0
+
+    for path in "${paths[@]}"; do
+        if [ ! -w "${path}" ]; then
+            needs_fix=1
+            break
+        fi
+    done
+
+    if [ "${needs_fix}" -eq 0 ]; then
+        return
+    fi
+
+    echo "Correction des permissions frontend (node_modules/public/build)..."
+
+    if command -v sudo >/dev/null 2>&1; then
+        sudo chown -R "$(id -u):$(id -g)" "${paths[@]}"
+        return
+    fi
+
+    echo "Permissions insuffisantes sur les assets frontend et sudo indisponible."
+    echo "Corrige manuellement les droits de node_modules/public/build puis relance ./start.sh"
+    exit 1
 }
 
 open_browser() {
@@ -118,6 +168,8 @@ fi
 
 echo "Reinitialisation des conteneurs/volumes du projet..."
 dcompose down -v --remove-orphans
+
+fix_node_modules_permissions
 
 build_frontend_assets
 

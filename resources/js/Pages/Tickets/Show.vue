@@ -45,27 +45,26 @@ const ageLabel = computed(() => {
     return `${days}d ${hours}h`;
 });
 
-const priority = computed(() => {
-    if (props.ticket.is_flagged || ageHours.value >= 72) {
+const dueStatus = computed(() => {
+    if (!props.ticket.due_at || props.ticket.status === 'closed') {
         return {
-            label: t('tickets.priority_critical'),
-            className: 'bg-rose-50 text-rose-700 ring-rose-200',
-            note: t('tickets.priority_critical_note'),
+            label: t('tickets.no_due_date'),
+            className: 'bg-slate-100 text-slate-700 ring-slate-200',
         };
     }
 
-    if (props.ticket.status === 'open' && ageHours.value >= 36) {
+    const dueDate = new Date(props.ticket.due_at);
+
+    if (dueDate.getTime() < Date.now()) {
         return {
-            label: t('tickets.priority_high'),
-            className: 'bg-amber-50 text-amber-700 ring-amber-200',
-            note: t('tickets.priority_high_note'),
+            label: t('tickets.overdue'),
+            className: 'bg-rose-50 text-rose-700 ring-rose-200',
         };
     }
 
     return {
-        label: t('tickets.priority_normal'),
-        className: 'bg-slate-100 text-slate-700 ring-slate-200',
-        note: t('tickets.priority_normal_note'),
+        label: t('tickets.on_track'),
+        className: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     };
 });
 
@@ -119,11 +118,10 @@ const timelineItems = computed(() => [
                 <SectionCard :title="ticket.title" :description="t('tickets.show_subtitle')">
                     <div class="mb-5 flex flex-wrap items-center gap-2">
                         <StatusBadge :status="ticket.status" />
-                        <span
-                            class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
-                            :class="priority.className"
-                        >
-                            {{ t('tickets.priority') }}: {{ priority.label }}
+                        <span class="pill">{{ t(`ticket_priority.${ticket.priority}`, ticket.priority) }}</span>
+                        <span class="pill">{{ t(`ticket_category.${ticket.category}`, ticket.category) }}</span>
+                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset" :class="dueStatus.className">
+                            {{ dueStatus.label }}
                         </span>
                         <span
                             class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset"
@@ -154,14 +152,14 @@ const timelineItems = computed(() => [
                 <SectionCard :title="t('tickets.operational_summary_title')" :description="t('tickets.operational_summary_hint')">
                     <div class="grid gap-3 md:grid-cols-2">
                         <div class="insight-item">
-                            <p class="tiny-muted">{{ t('tickets.priority') }}</p>
-                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ priority.label }}</p>
-                            <p class="mt-1 text-xs text-slate-500">{{ priority.note }}</p>
-                        </div>
-                        <div class="insight-item">
                             <p class="tiny-muted">{{ t('tickets.next_action_title') }}</p>
                             <p class="mt-1 text-sm font-semibold text-slate-900">{{ nextAction }}</p>
                             <p class="mt-1 text-xs text-slate-500">{{ t('tickets.next_action_hint') }}</p>
+                        </div>
+                        <div class="insight-item">
+                            <p class="tiny-muted">{{ t('tickets.assignee_label') }}</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">{{ ticket.assignee?.email ?? t('tickets.unassigned') }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ t('tickets.assignee_hint') }}</p>
                         </div>
                     </div>
                 </SectionCard>
@@ -173,6 +171,14 @@ const timelineItems = computed(() => [
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.owner') }}</dt>
                             <dd class="mt-1 text-slate-800">{{ ticket.user?.email ?? '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('tickets.assignee_label') }}</dt>
+                            <dd class="mt-1 text-slate-800">{{ ticket.assignee?.email ?? t('tickets.unassigned') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('tickets.due_at_label') }}</dt>
+                            <dd class="mt-1 text-slate-800">{{ formatDate(ticket.due_at) }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.created_at') }}</dt>

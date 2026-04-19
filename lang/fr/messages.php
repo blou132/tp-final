@@ -7,6 +7,7 @@ return [
         'dashboard' => 'Tableau de bord',
         'tickets' => 'Tickets',
         'payments' => 'Paiements',
+        'activities' => 'Activité',
         'profile' => 'Profil',
         'logout' => 'Déconnexion',
     ],
@@ -59,6 +60,7 @@ return [
         'sort_amount_desc' => 'Montant décroissant',
         'sort_amount_asc' => 'Montant croissant',
         'view_all' => 'Voir tout',
+        'export_csv' => 'Exporter CSV',
     ],
 
     'dashboard' => [
@@ -222,6 +224,16 @@ return [
         'status_overview_hint' => 'Répartition actuelle des lignes visibles.',
         'quick_actions_title' => 'Actions tickets',
         'quick_actions_hint' => 'Créer un ticket ou accéder aux files prioritaires.',
+        'priority_label' => 'Priorité',
+        'category_label' => 'Catégorie',
+        'due_at_label' => 'Échéance',
+        'assignee_label' => 'Assigné à',
+        'assignee_hint' => 'Seul un administrateur peut assigner un ticket.',
+        'unassigned' => 'Non assigné',
+        'due_today' => 'Échéance aujourd’hui',
+        'overdue' => 'En retard',
+        'on_track' => 'Dans les délais',
+        'no_due_date' => 'Sans échéance',
     ],
 
     'payments' => [
@@ -307,6 +319,40 @@ return [
         'pending' => 'En attente',
         'paid' => 'Payé',
         'failed' => 'Échoué',
+    ],
+
+    'ticket_priority' => [
+        'low' => 'Faible',
+        'medium' => 'Moyenne',
+        'high' => 'Haute',
+        'urgent' => 'Urgente',
+    ],
+
+    'ticket_category' => [
+        'general' => 'Général',
+        'technical' => 'Technique',
+        'billing' => 'Facturation',
+        'account' => 'Compte',
+    ],
+
+    'activities' => [
+        'title' => 'Journal d’activité',
+        'subtitle' => 'Historique des événements tickets et paiements.',
+        'rows_label' => 'lignes',
+        'filters_title' => 'Filtres activité',
+        'filters_hint' => 'Affinez les événements selon entité, action ou acteur.',
+        'filter_entity' => 'Entité',
+        'filter_action' => 'Action',
+        'filter_actor' => 'Acteur',
+        'action_placeholder' => 'Exemple : ticket.updated',
+        'col_action' => 'Action',
+        'col_entity' => 'Entité',
+        'col_record' => 'Enregistrement',
+        'col_actor' => 'Acteur',
+        'col_metadata' => 'Métadonnées',
+        'empty' => 'Aucun événement trouvé.',
+        'empty_hint' => 'Ajustez les filtres ou générez de nouvelles actions dans l’application.',
+        'mongo_unavailable' => 'Le journal MongoDB est temporairement indisponible. Les opérations principales restent accessibles.',
     ],
 
     'welcome' => [

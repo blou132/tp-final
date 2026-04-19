@@ -107,4 +107,33 @@ class PaymentManagementTest extends TestCase
             'status' => PaymentStatus::PAID->value,
         ]);
     }
+
+    public function test_payment_export_only_contains_user_visible_rows(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('user');
+
+        $other = User::factory()->create();
+        $other->assignRole('user');
+
+        Payment::factory()->for($user)->create([
+            'amount' => 120.40,
+            'status' => PaymentStatus::PENDING->value,
+        ]);
+
+        Payment::factory()->for($other)->create([
+            'amount' => 987.65,
+            'status' => PaymentStatus::FAILED->value,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('payments.export'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        $csv = $response->streamedContent();
+
+        $this->assertStringContainsString('120.4', $csv);
+        $this->assertStringNotContainsString('987.65', $csv);
+    }
 }

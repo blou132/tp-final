@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
 defineProps({
@@ -23,12 +23,9 @@ defineProps({
 });
 
 const { t, locale, supportedLocales } = useI18n();
-const page = usePage();
-
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
-        redirect: page.url ?? '/',
     });
 
 const navLinks = computed(() => [
@@ -187,14 +184,14 @@ onBeforeUnmount(() => {
 
                 <div class="nav-actions">
                     <div class="locale-switch">
-                        <a
+                        <Link
                             v-for="localeCode in supportedLocales"
                             :key="localeCode"
                             :href="localeSwitchHref(localeCode)"
                             :class="['locale-pill', locale === localeCode ? 'is-active' : '']"
                         >
                             {{ localeCode }}
-                        </a>
+                        </Link>
                     </div>
 
                     <Link v-if="canLogin" :href="route('login')" class="btn btn-ghost">

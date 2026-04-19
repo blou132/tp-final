@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
 use App\Enums\TicketStatus;
+use App\Models\ActivityLog;
 use App\Models\Payment;
 use App\Models\Ticket;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class DashboardController extends Controller
 {
@@ -54,6 +57,8 @@ class DashboardController extends Controller
                 'created_at' => $payment->created_at?->toIso8601String(),
             ]);
 
+        $recentActivities = $this->recentActivities($request);
+
         return Inertia::render('Dashboard', [
             'stats' => [
                 'tickets' => [
@@ -61,6 +66,11 @@ class DashboardController extends Controller
                     'open' => $ticketStats[TicketStatus::OPEN->value],
                     'in_progress' => $ticketStats[TicketStatus::IN_PROGRESS->value],
                     'closed' => $ticketStats[TicketStatus::CLOSED->value],
+                    'overdue' => (clone $ticketQuery)->overdue()->count(),
+                    'due_today' => (clone $ticketQuery)
+                        ->whereIn('status', [TicketStatus::OPEN->value, TicketStatus::IN_PROGRESS->value])
+                        ->whereDate('due_at', today())
+                        ->count(),
                 ],
                 'payments' => [
                     'total' => (clone $paymentQuery)->count(),
@@ -74,6 +84,7 @@ class DashboardController extends Controller
             ],
             'recentTickets' => $recentTickets,
             'recentPayments' => $recentPayments,
+            'recentActivities' => $recentActivities,
             'can' => [
                 'create_ticket' => $request->user()->can('create', Ticket::class),
                 'create_payment' => $request->user()->can('create', Payment::class),
@@ -101,5 +112,35 @@ class DashboardController extends Controller
         }
 
         return $query;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function recentActivities(Request $request): array
+    {
+        try {
+            $query = ActivityLog::query()->orderByDesc('_id');
+
+            if (! $request->user()->hasRole('admin')) {
+                $query->where('actor_id', $request->user()->id);
+            }
+
+            return collect($query->limit(8)->get()->all())
+                ->map(fn (ActivityLog $activity): array => [
+                    'id' => (string) ($activity->_id ?? $activity->id),
+                    'action' => (string) $activity->action,
+                    'entity_type' => (string) $activity->entity_type,
+                    'entity_id' => (string) $activity->entity_id,
+                    'created_at' => $activity->created_at?->toIso8601String(),
+                ])
+                ->all();
+        } catch (Throwable $exception) {
+            Log::warning('Dashboard activity feed unavailable', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [];
+        }
     }
 }

@@ -11,6 +11,18 @@ const props = defineProps({
         type: Array,
         required: true,
     },
+    priorities: {
+        type: Array,
+        default: () => [],
+    },
+    categories: {
+        type: Array,
+        default: () => [],
+    },
+    assignableUsers: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const { t } = useI18n();
@@ -19,12 +31,21 @@ const form = useForm({
     title: '',
     description: '',
     status: props.statuses[0] ?? 'open',
+    priority: props.priorities[1] ?? props.priorities[0] ?? 'medium',
+    category: props.categories[0] ?? 'general',
+    due_at: '',
+    assigned_to: '',
 });
 
 const currentStatus = computed(() => form.status);
+const hasAssignableUsers = computed(() => props.assignableUsers.length > 0);
 
 const submit = () => {
-    form.post(route('tickets.store'));
+    form.transform((data) => ({
+        ...data,
+        due_at: data.due_at || null,
+        assigned_to: hasAssignableUsers.value && data.assigned_to !== '' ? Number(data.assigned_to) : null,
+    })).post(route('tickets.store'));
 };
 </script>
 
@@ -62,14 +83,55 @@ const submit = () => {
                         <p v-if="form.errors.description" class="mt-1 text-sm text-rose-600">{{ form.errors.description }}</p>
                     </div>
 
-                    <div>
-                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ t('common.status') }}</label>
-                        <select v-model="form.status" class="select-base">
-                            <option v-for="status in statuses" :key="status" :value="status">
-                                {{ t(`status.${status}`, status) }}
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ t('common.status') }}</label>
+                            <select v-model="form.status" class="select-base">
+                                <option v-for="status in statuses" :key="status" :value="status">
+                                    {{ t(`status.${status}`, status) }}
+                                </option>
+                            </select>
+                            <p v-if="form.errors.status" class="mt-1 text-sm text-rose-600">{{ form.errors.status }}</p>
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ t('tickets.priority_label') }}</label>
+                            <select v-model="form.priority" class="select-base">
+                                <option v-for="priority in priorities" :key="priority" :value="priority">
+                                    {{ t(`ticket_priority.${priority}`, priority) }}
+                                </option>
+                            </select>
+                            <p v-if="form.errors.priority" class="mt-1 text-sm text-rose-600">{{ form.errors.priority }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ t('tickets.category_label') }}</label>
+                            <select v-model="form.category" class="select-base">
+                                <option v-for="category in categories" :key="category" :value="category">
+                                    {{ t(`ticket_category.${category}`, category) }}
+                                </option>
+                            </select>
+                            <p v-if="form.errors.category" class="mt-1 text-sm text-rose-600">{{ form.errors.category }}</p>
+                        </div>
+
+                        <div>
+                            <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ t('tickets.due_at_label') }}</label>
+                            <input v-model="form.due_at" type="datetime-local" class="input-base" />
+                            <p v-if="form.errors.due_at" class="mt-1 text-sm text-rose-600">{{ form.errors.due_at }}</p>
+                        </div>
+                    </div>
+
+                    <div v-if="hasAssignableUsers">
+                        <label class="mb-1.5 block text-sm font-semibold text-slate-700">{{ t('tickets.assignee_label') }}</label>
+                        <select v-model="form.assigned_to" class="select-base">
+                            <option value="">{{ t('tickets.unassigned') }}</option>
+                            <option v-for="user in assignableUsers" :key="user.id" :value="String(user.id)">
+                                {{ user.name }} • {{ user.email }}
                             </option>
                         </select>
-                        <p v-if="form.errors.status" class="mt-1 text-sm text-rose-600">{{ form.errors.status }}</p>
+                        <p v-if="form.errors.assigned_to" class="mt-1 text-sm text-rose-600">{{ form.errors.assigned_to }}</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2 pt-2">
@@ -86,6 +148,10 @@ const submit = () => {
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.status') }}</p>
                         <div class="mt-2"><StatusBadge :status="currentStatus" /></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                        <span class="pill">{{ t('tickets.priority_label') }}: {{ t(`ticket_priority.${form.priority}`, form.priority) }}</span>
+                        <span class="pill">{{ t('tickets.category_label') }}: {{ t(`ticket_category.${form.category}`, form.category) }}</span>
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t('common.title') }}</p>

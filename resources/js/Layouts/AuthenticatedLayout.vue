@@ -17,6 +17,7 @@ const pageTitleMap = {
     dashboard: 'nav.dashboard',
     tickets: 'nav.tickets',
     payments: 'nav.payments',
+    activities: 'nav.activities',
     profile: 'nav.profile',
 };
 
@@ -31,6 +32,10 @@ const currentPageTitle = computed(() => {
 
     if (route().current('payments.*')) {
         return t(pageTitleMap.payments);
+    }
+
+    if (route().current('activities.*')) {
+        return t(pageTitleMap.activities);
     }
 
     if (route().current('profile.*')) {
@@ -63,7 +68,6 @@ const todayLabel = computed(() =>
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
-        redirect: page.url ?? '/',
     });
 
 const navItems = [
@@ -84,6 +88,12 @@ const navItems = [
         routeName: 'payments.index',
         current: 'payments.*',
         icon: 'M4 7h16M4 12h16M4 17h8M3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13A1.5 1.5 0 0 1 3.5 4z',
+    },
+    {
+        key: 'activities',
+        routeName: 'activities.index',
+        current: 'activities.*',
+        icon: 'M5 5v14M12 5v14M19 5v14M3.5 4h17A1.5 1.5 0 0 1 22 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 18.5v-13A1.5 1.5 0 0 1 3.5 4z',
     },
 ];
 
@@ -168,7 +178,7 @@ const closeMobileSidebar = () => {
                             </div>
 
                             <div class="hidden items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:flex">
-                                <a
+                                <Link
                                     v-for="localeCode in supportedLocales"
                                     :key="localeCode"
                                     :href="localeSwitchHref(localeCode)"
@@ -180,7 +190,7 @@ const closeMobileSidebar = () => {
                                     ]"
                                 >
                                     {{ localeCode }}
-                                </a>
+                                </Link>
                             </div>
 
                             <Dropdown align="right" width="48">
@@ -226,6 +236,9 @@ const closeMobileSidebar = () => {
                         </Link>
                         <Link :href="route('payments.index', { status: 'failed' })" class="metric-chip hover:bg-slate-50">
                             {{ t('status.failed') }}
+                        </Link>
+                        <Link :href="route('activities.index')" class="metric-chip hover:bg-slate-50">
+                            {{ t('nav.activities') }}
                         </Link>
                     </div>
                 </div>

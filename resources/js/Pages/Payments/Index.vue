@@ -31,7 +31,7 @@ const props = defineProps({
 const { t, locale } = useI18n();
 
 const selectedStatus = ref(props.filters.status ?? '');
-const searchQuery = ref('');
+const searchQuery = ref(props.filters.q ?? '');
 const sortBy = ref('newest');
 const deletingPayment = ref(null);
 
@@ -47,6 +47,7 @@ const applyFilters = () => {
         route('payments.index'),
         {
             status: selectedStatus.value || undefined,
+            q: searchQuery.value.trim() || undefined,
         },
         {
             preserveState: true,
@@ -220,9 +221,14 @@ const sizeBand = (payment) => {
                     <h2 class="page-title">{{ t('payments.title') }}</h2>
                     <p class="page-subtitle">{{ t('payments.list_subtitle') }}</p>
                 </div>
-                <Link v-if="can.create" :href="route('payments.create')" class="btn-primary">
-                    {{ t('payments.new') }}
-                </Link>
+                <div class="flex flex-wrap gap-2">
+                    <Link v-if="can.export" :href="route('payments.export', filters)" class="btn-secondary">
+                        {{ t('common.export_csv') }}
+                    </Link>
+                    <Link v-if="can.create" :href="route('payments.create')" class="btn-primary">
+                        {{ t('payments.new') }}
+                    </Link>
+                </div>
             </div>
         </template>
 

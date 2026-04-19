@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\PaymentStatus;
+use App\Enums\TicketCategory;
+use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Payment;
 use App\Models\Ticket;
@@ -59,20 +61,31 @@ class DatabaseSeeder extends Seeder
 
         $seedUsers = (new Collection([$admin, $standardUser]))->merge($extraUsers);
         $ticketStatuses = TicketStatus::values();
+        $ticketPriorities = TicketPriority::values();
+        $ticketCategories = TicketCategory::values();
         $paymentStatuses = PaymentStatus::values();
 
         foreach ($seedUsers as $userIndex => $user) {
-            for ($ticketIndex = 1; $ticketIndex <= 3; $ticketIndex++) {
+            for ($ticketIndex = 1; $ticketIndex <= 5; $ticketIndex++) {
+                $status = $ticketStatuses[($userIndex + $ticketIndex) % count($ticketStatuses)];
+                $dueAt = in_array($status, [TicketStatus::OPEN->value, TicketStatus::IN_PROGRESS->value], true)
+                    ? now()->addDays(($ticketIndex % 5) - 2)
+                    : null;
+
                 Ticket::query()->create([
                     'title' => "Ticket {$ticketIndex} - {$user->name}",
                     'description' => "Description du ticket {$ticketIndex} pour {$user->email}.",
-                    'status' => $ticketStatuses[($userIndex + $ticketIndex) % count($ticketStatuses)],
-                    'is_flagged' => false,
+                    'status' => $status,
+                    'priority' => $ticketPriorities[($userIndex + $ticketIndex) % count($ticketPriorities)],
+                    'category' => $ticketCategories[($userIndex + $ticketIndex) % count($ticketCategories)],
+                    'due_at' => $dueAt,
+                    'is_flagged' => ($ticketIndex + $userIndex) % 7 === 0,
                     'user_id' => $user->id,
+                    'assigned_to' => $status === TicketStatus::CLOSED->value ? null : $admin->id,
                 ]);
             }
 
-            for ($paymentIndex = 1; $paymentIndex <= 2; $paymentIndex++) {
+            for ($paymentIndex = 1; $paymentIndex <= 3; $paymentIndex++) {
                 Payment::query()->create([
                     'amount' => 50 + ($userIndex * 20) + ($paymentIndex * 10),
                     'status' => $paymentStatuses[($userIndex + $paymentIndex) % count($paymentStatuses)],

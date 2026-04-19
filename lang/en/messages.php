@@ -7,6 +7,7 @@ return [
         'dashboard' => 'Dashboard',
         'tickets' => 'Tickets',
         'payments' => 'Payments',
+        'activities' => 'Activity',
         'profile' => 'Profile',
         'logout' => 'Log Out',
     ],
@@ -59,6 +60,7 @@ return [
         'sort_amount_desc' => 'Amount high-low',
         'sort_amount_asc' => 'Amount low-high',
         'view_all' => 'View all',
+        'export_csv' => 'Export CSV',
     ],
 
     'dashboard' => [
@@ -222,6 +224,16 @@ return [
         'status_overview_hint' => 'Current status split for visible rows.',
         'quick_actions_title' => 'Ticket actions',
         'quick_actions_hint' => 'Create or jump to high-priority queues.',
+        'priority_label' => 'Priority',
+        'category_label' => 'Category',
+        'due_at_label' => 'Due date',
+        'assignee_label' => 'Assignee',
+        'assignee_hint' => 'Only administrators can assign a ticket.',
+        'unassigned' => 'Unassigned',
+        'due_today' => 'Due today',
+        'overdue' => 'Overdue',
+        'on_track' => 'On track',
+        'no_due_date' => 'No due date',
     ],
 
     'payments' => [
@@ -307,6 +319,40 @@ return [
         'pending' => 'Pending',
         'paid' => 'Paid',
         'failed' => 'Failed',
+    ],
+
+    'ticket_priority' => [
+        'low' => 'Low',
+        'medium' => 'Medium',
+        'high' => 'High',
+        'urgent' => 'Urgent',
+    ],
+
+    'ticket_category' => [
+        'general' => 'General',
+        'technical' => 'Technical',
+        'billing' => 'Billing',
+        'account' => 'Account',
+    ],
+
+    'activities' => [
+        'title' => 'Activity log',
+        'subtitle' => 'History of ticket and payment events.',
+        'rows_label' => 'rows',
+        'filters_title' => 'Activity filters',
+        'filters_hint' => 'Refine events by entity, action, or actor.',
+        'filter_entity' => 'Entity',
+        'filter_action' => 'Action',
+        'filter_actor' => 'Actor',
+        'action_placeholder' => 'Example: ticket.updated',
+        'col_action' => 'Action',
+        'col_entity' => 'Entity',
+        'col_record' => 'Record',
+        'col_actor' => 'Actor',
+        'col_metadata' => 'Metadata',
+        'empty' => 'No events found.',
+        'empty_hint' => 'Adjust filters or trigger new actions in the app.',
+        'mongo_unavailable' => 'MongoDB activity logs are temporarily unavailable. Core operations remain accessible.',
     ],
 
     'welcome' => [

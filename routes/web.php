@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
@@ -22,10 +23,14 @@ Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/activities', [ActivityController::class, 'index'])->name('activities.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('tickets/export', [TicketController::class, 'export'])->name('tickets.export');
+    Route::get('payments/export', [PaymentController::class, 'export'])->name('payments.export');
 
     Route::resource('tickets', TicketController::class);
     Route::resource('payments', PaymentController::class);

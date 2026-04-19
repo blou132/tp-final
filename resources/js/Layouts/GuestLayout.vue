@@ -1,15 +1,13 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
-const page = usePage();
 const { t, locale, supportedLocales } = useI18n();
 
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
-        redirect: page.url ?? '/',
     });
 </script>
 
@@ -23,7 +21,7 @@ const localeSwitchHref = (localeCode) =>
         <div class="relative w-full max-w-5xl">
             <div class="mb-4 flex justify-center lg:justify-end">
                 <div class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white/90 p-1 shadow-sm">
-                    <a
+                    <Link
                         v-for="localeCode in supportedLocales"
                         :key="localeCode"
                         :href="localeSwitchHref(localeCode)"
@@ -35,7 +33,7 @@ const localeSwitchHref = (localeCode) =>
                         ]"
                     >
                         {{ localeCode }}
-                    </a>
+                    </Link>
                 </div>
             </div>
 

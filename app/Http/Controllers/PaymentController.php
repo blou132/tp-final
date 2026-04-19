@@ -7,10 +7,12 @@ use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Models\Payment;
 use App\Services\ActivityLogService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
@@ -24,16 +26,11 @@ class PaymentController extends Controller
 
         $user = $request->user();
 
-        $query = Payment::query()->with('user')->latest();
+        $query = $this->visiblePaymentsQuery($request)
+            ->with('user')
+            ->latest();
 
-        if (! $user->hasRole('admin')) {
-            $query->where('user_id', $user->id);
-        }
-
-        $statusFilter = $request->string('status')->toString();
-        if ($statusFilter !== '' && in_array($statusFilter, PaymentStatus::values(), true)) {
-            $query->where('status', $statusFilter);
-        }
+        $filters = $this->applyIndexFilters($query, $request);
 
         return Inertia::render('Payments/Index', [
             'payments' => $query->paginate(10)->withQueryString()->through(fn (Payment $payment): array => [
@@ -53,11 +50,10 @@ class PaymentController extends Controller
                 ],
             ]),
             'statuses' => PaymentStatus::values(),
-            'filters' => [
-                'status' => $statusFilter,
-            ],
+            'filters' => $filters,
             'can' => [
                 'create' => $user->can('create', Payment::class),
+                'export' => $user->can('viewAny', Payment::class),
             ],
         ]);
     }
@@ -170,5 +166,96 @@ class PaymentController extends Controller
         return redirect()
             ->route('payments.index')
             ->with('success', __('messages.flash.payment_deleted'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->authorize('viewAny', Payment::class);
+
+        $query = $this->visiblePaymentsQuery($request)
+            ->with('user:id,name,email')
+            ->latest();
+
+        $this->applyIndexFilters($query, $request);
+
+        $payments = $query->get();
+        $filename = sprintf('payments-%s.csv', now()->format('Ymd-His'));
+
+        return response()->streamDownload(function () use ($payments): void {
+            $handle = fopen('php://output', 'wb');
+
+            if ($handle === false) {
+                return;
+            }
+
+            fputcsv($handle, [
+                'id',
+                'amount',
+                'status',
+                'owner_email',
+                'created_at',
+            ]);
+
+            foreach ($payments as $payment) {
+                fputcsv($handle, [
+                    $payment->id,
+                    (string) $payment->amount,
+                    $payment->getRawOriginal('status'),
+                    $payment->user?->email,
+                    $payment->created_at?->toIso8601String(),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function visiblePaymentsQuery(Request $request): Builder
+    {
+        $query = Payment::query();
+
+        if (! $request->user()->hasRole('admin')) {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return array{status: string, q: string}
+     */
+    private function applyIndexFilters(Builder $query, Request $request): array
+    {
+        $status = $request->string('status')->toString();
+        if ($status !== '' && in_array($status, PaymentStatus::values(), true)) {
+            $query->where('status', $status);
+        } else {
+            $status = '';
+        }
+
+        $search = trim($request->string('q')->toString());
+        if ($search !== '') {
+            $query->where(function (Builder $builder) use ($search): void {
+                $builder
+                    ->whereHas('user', function (Builder $userQuery) use ($search): void {
+                        $userQuery
+                            ->where('email', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    });
+
+                if (is_numeric($search)) {
+                    $builder
+                        ->orWhere('id', (int) $search)
+                        ->orWhere('amount', (float) $search);
+                }
+            });
+        }
+
+        return [
+            'status' => $status,
+            'q' => $search,
+        ];
     }
 }
