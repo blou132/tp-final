@@ -305,9 +305,16 @@ const priorityInfo = (ticket) => {
                             <tr v-for="ticket in rows" :key="ticket.id" class="table-row">
                                 <td class="table-cell mono text-xs text-slate-500">#{{ ticket.id }}</td>
                                 <td class="table-cell">
-                                    <Link :href="route('tickets.show', ticket.id)" class="font-semibold text-slate-900 hover:text-slate-700">
+                                    <Link
+                                        v-if="ticket.can?.view"
+                                        :href="route('tickets.show', ticket.id)"
+                                        class="font-semibold text-slate-900 hover:text-slate-700"
+                                    >
                                         {{ ticket.title }}
                                     </Link>
+                                    <p v-else class="font-semibold text-slate-900">
+                                        {{ ticket.title }}
+                                    </p>
                                     <p class="mt-1 text-xs text-slate-500">{{ excerpt(ticket.description) }}</p>
                                     <p class="mt-1 text-xs text-slate-400 2xl:hidden">
                                         {{ ticket.user?.email ?? '-' }} • {{ formatDate(ticket.created_at) }}
@@ -325,16 +332,27 @@ const priorityInfo = (ticket) => {
                                 <td class="table-cell text-slate-600 hidden 2xl:table-cell">{{ ticket.user?.email ?? '-' }}</td>
                                 <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatAge(ticket) }}</td>
                                 <td class="table-cell">
-                                    <div class="flex flex-wrap gap-1">
-                                        <Link :href="route('tickets.show', ticket.id)" class="btn-ghost">{{ t('common.details') }}</Link>
-                                        <Link :href="route('tickets.edit', ticket.id)" class="btn-ghost">{{ t('common.edit') }}</Link>
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        <Link v-if="ticket.can?.view" :href="route('tickets.show', ticket.id)" class="btn-ghost">
+                                            {{ t('common.details') }}
+                                        </Link>
+                                        <Link v-if="ticket.can?.update" :href="route('tickets.edit', ticket.id)" class="btn-ghost">
+                                            {{ t('common.edit') }}
+                                        </Link>
                                         <button
+                                            v-if="ticket.can?.delete"
                                             type="button"
                                             class="btn-ghost !text-rose-600 hover:!bg-rose-50"
                                             @click="openDeleteDialog(ticket)"
                                         >
                                             {{ t('common.delete') }}
                                         </button>
+                                        <span
+                                            v-if="!ticket.can?.view && !ticket.can?.update && !ticket.can?.delete"
+                                            class="text-xs font-medium text-slate-400"
+                                        >
+                                            —
+                                        </span>
                                     </div>
                                 </td>
                             </tr>

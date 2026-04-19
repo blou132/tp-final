@@ -37,6 +37,22 @@ class PaymentManagementTest extends TestCase
         ]);
     }
 
+    public function test_user_can_delete_own_payment(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('user');
+
+        $payment = Payment::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->delete(route('payments.destroy', $payment));
+
+        $response->assertRedirect(route('payments.index'));
+
+        $this->assertDatabaseMissing('payments', [
+            'id' => $payment->id,
+        ]);
+    }
+
     public function test_user_cannot_delete_someone_else_payment(): void
     {
         $owner = User::factory()->create();
@@ -48,6 +64,21 @@ class PaymentManagementTest extends TestCase
         $payment = Payment::factory()->for($owner)->create();
 
         $response = $this->actingAs($other)->delete(route('payments.destroy', $payment));
+
+        $response->assertForbidden();
+    }
+
+    public function test_user_cannot_view_someone_else_payment(): void
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('user');
+
+        $other = User::factory()->create();
+        $other->assignRole('user');
+
+        $payment = Payment::factory()->for($owner)->create();
+
+        $response = $this->actingAs($other)->get(route('payments.show', $payment));
 
         $response->assertForbidden();
     }

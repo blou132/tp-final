@@ -46,6 +46,11 @@ class PaymentController extends Controller
                     'email' => $payment->user?->email,
                 ],
                 'created_at' => $payment->created_at?->toIso8601String(),
+                'can' => [
+                    'view' => $user->can('view', $payment),
+                    'update' => $user->can('update', $payment),
+                    'delete' => $user->can('delete', $payment),
+                ],
             ]),
             'statuses' => PaymentStatus::values(),
             'filters' => [

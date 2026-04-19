@@ -85,12 +85,18 @@ MongoDB n'est pas utilisé comme stockage principal. Il sert à l'**audit applic
 
 Collection utilisée: `activity_logs`.
 
+Vérifier rapidement les logs d'audit (Docker):
+```bash
+docker compose exec mongodb mongosh -u root -p root --authenticationDatabase admin --eval 'db.getSiblingDB("tp_final_logs").activity_logs.find().sort({_id:-1}).limit(5).pretty()'
+```
+
 ## 7. Sécurité
 - Form Requests strictes.
 - Policies + rôles/permissions Spatie.
 - Restriction des données par ownership (user) ou rôle admin.
 - Mass assignment sécurisé via `$fillable`.
 - API protégée par `auth:sanctum` + contrôles d'autorisation.
+- Permission dédiée API (`api.tickets.view`) réellement exigée sur les endpoints avancés.
 - Messages flash + erreurs gérées proprement.
 
 ## 8. Installation locale (sans Docker)
@@ -188,6 +194,8 @@ Si vous voulez verifier rapidement le build frontend:
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/app" -w /app node:22 sh -lc "npm ci && npm run build"
 ```
 
+Si `npm run build` échoue en local avec une erreur Vite/Node, utilisez Node 22 (ou la commande Docker ci-dessus).
+
 ## 10. Tests
 ```bash
 php artisan test
@@ -200,6 +208,7 @@ Couverture incluse:
 
 ## 11. API avancée Tickets
 Toutes les routes ci-dessous nécessitent un utilisateur authentifié Sanctum.
+Elles exigent également la permission Spatie `api.tickets.view`.
 
 ### 11.1 Open tickets
 - `GET /api/open-tickets`

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { useI18n } from '@/composables/useI18n';
 
 defineProps({
@@ -23,10 +23,12 @@ defineProps({
 });
 
 const { t, locale, supportedLocales } = useI18n();
+const page = usePage();
 
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
+        redirect: page.url ?? '/',
     });
 
 const navLinks = computed(() => [
@@ -167,7 +169,7 @@ onBeforeUnmount(() => {
                 <Link :href="route('home')" class="brand">
                     <span class="brand-mark">SP</span>
                     <span>
-                        <small class="brand-kicker">Plateforme SaaS</small>
+                        <small class="brand-kicker">{{ t('welcome.hero_kicker', 'Plateforme SaaS') }}</small>
                         <strong class="brand-title">{{ t('app_name', 'Support & Paiements') }}</strong>
                     </span>
                 </Link>
@@ -185,14 +187,14 @@ onBeforeUnmount(() => {
 
                 <div class="nav-actions">
                     <div class="locale-switch">
-                        <Link
+                        <a
                             v-for="localeCode in supportedLocales"
                             :key="localeCode"
                             :href="localeSwitchHref(localeCode)"
                             :class="['locale-pill', locale === localeCode ? 'is-active' : '']"
                         >
                             {{ localeCode }}
-                        </Link>
+                        </a>
                     </div>
 
                     <Link v-if="canLogin" :href="route('login')" class="btn btn-ghost">
@@ -206,15 +208,9 @@ onBeforeUnmount(() => {
 
             <section class="hero-section reveal-node" :ref="registerReveal">
                 <article class="hero-copy">
-                    <span class="hero-pill">Cockpit support & finance</span>
-                    <h1>
-                        Pilotez tickets et paiements
-                        <span>depuis une seule console.</span>
-                    </h1>
-                    <p>
-                        Un environnement opérationnel premium pour centraliser le support client, sécuriser les flux
-                        de paiement et suivre la performance en temps réel.
-                    </p>
+                    <span class="hero-pill">{{ t('welcome.hero_badge', 'Cockpit support & finance') }}</span>
+                    <h1>{{ t('welcome.hero_title', 'Pilotez tickets et paiements depuis une seule console.') }}</h1>
+                    <p>{{ t('welcome.hero_text', 'Un environnement opérationnel premium pour centraliser le support client, sécuriser les flux de paiement et suivre la performance en temps réel.') }}</p>
 
                     <div class="hero-ctas">
                         <Link v-if="canLogin" :href="route('login')" class="btn btn-primary btn-xl">
@@ -231,10 +227,10 @@ onBeforeUnmount(() => {
                     <div class="preview-card">
                         <div class="preview-head">
                             <div>
-                                <p class="preview-kicker">Live dashboard</p>
-                                <h3>Vue instantanée</h3>
+                                <p class="preview-kicker">{{ t('welcome.live_title', 'Live dashboard') }}</p>
+                                <h3>{{ t('welcome.live_subtitle', 'Vue instantanée') }}</h3>
                             </div>
-                            <span class="live-dot">Live</span>
+                            <span class="live-dot">{{ t('welcome.live_label', 'Live') }}</span>
                         </div>
 
                         <div class="preview-metrics">
@@ -257,7 +253,7 @@ onBeforeUnmount(() => {
             </section>
 
             <section class="social-proof reveal-node" :ref="registerReveal">
-                <p>Équipes qui opèrent déjà avec Support & Paiements</p>
+                <p>{{ t('welcome.social_proof_title', 'Équipes qui opèrent déjà avec Support & Paiements') }}</p>
                 <div class="social-grid">
                     <span v-for="name in socialProof" :key="name">{{ name }}</span>
                 </div>
@@ -265,8 +261,8 @@ onBeforeUnmount(() => {
 
             <section id="features" class="features-section reveal-node" :ref="registerReveal">
                 <header>
-                    <p class="section-kicker">Fonctionnalités clés</p>
-                    <h2>Un design système pensé pour l’exécution.</h2>
+                    <p class="section-kicker">{{ t('welcome.modules_title', 'Fonctionnalités clés') }}</p>
+                    <h2>{{ t('welcome.modules_subtitle', 'Un design système pensé pour l’exécution.') }}</h2>
                 </header>
 
                 <div class="features-grid">
@@ -280,8 +276,8 @@ onBeforeUnmount(() => {
 
             <section id="workflow" class="workflow-section reveal-node" :ref="registerReveal">
                 <header>
-                    <p class="section-kicker">Comment ça marche</p>
-                    <h2>De l’incident à la résolution, sans friction.</h2>
+                    <p class="section-kicker">{{ t('welcome.workflow_title', 'Comment ça marche') }}</p>
+                    <h2>{{ t('welcome.workflow_subtitle', 'De l’incident à la résolution, sans friction.') }}</h2>
                 </header>
 
                 <div class="workflow-grid">
@@ -295,8 +291,8 @@ onBeforeUnmount(() => {
 
             <section id="stats" class="stats-section reveal-node" :ref="registerReveal">
                 <header>
-                    <p class="section-kicker">Indicateurs</p>
-                    <h2>Performance opérationnelle lisible en un regard.</h2>
+                    <p class="section-kicker">{{ t('welcome.stats_title', 'Indicateurs') }}</p>
+                    <h2>{{ t('welcome.stats_subtitle', 'Performance opérationnelle lisible en un regard.') }}</h2>
                 </header>
 
                 <div class="stats-grid">
@@ -310,11 +306,9 @@ onBeforeUnmount(() => {
 
             <section id="cta" class="final-cta reveal-node" :ref="registerReveal">
                 <div>
-                    <p class="section-kicker">Prêt à déployer</p>
-                    <h2>Transformez vos opérations support et paiement.</h2>
-                    <p>
-                        Lancez un espace premium, sécurisé et orienté résultats pour vos équipes support, finance et produit.
-                    </p>
+                    <p class="section-kicker">{{ t('welcome.final_cta_kicker', 'Prêt à déployer') }}</p>
+                    <h2>{{ t('welcome.final_cta_title', 'Transformez vos opérations support et paiement.') }}</h2>
+                    <p>{{ t('welcome.final_cta_text', 'Lancez un espace premium, sécurisé et orienté résultats pour vos équipes support, finance et produit.') }}</p>
                 </div>
 
                 <div class="final-cta-actions">

@@ -58,6 +58,21 @@ class TicketManagementTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_user_cannot_view_ticket_of_another_user(): void
+    {
+        $owner = User::factory()->create();
+        $owner->assignRole('user');
+
+        $other = User::factory()->create();
+        $other->assignRole('user');
+
+        $ticket = Ticket::factory()->for($owner)->create();
+
+        $response = $this->actingAs($other)->get(route('tickets.show', $ticket));
+
+        $response->assertForbidden();
+    }
+
     public function test_admin_can_delete_any_ticket(): void
     {
         $admin = User::factory()->create();

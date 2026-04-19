@@ -96,30 +96,30 @@ const formatDate = (value) => {
 
 const kpiCards = computed(() => [
     {
-        label: 'Tickets ouverts',
+        label: t('dashboard.kpi_open_tickets_label', 'Tickets ouverts'),
         value: ticketsOpen.value,
-        hint: `${ticketsInProgress.value} en cours`,
+        hint: `${ticketsInProgress.value} ${t('status.in_progress').toLowerCase()}`,
         progress: ticketsTotal.value > 0 ? Math.round((ticketsOpen.value / ticketsTotal.value) * 100) : 0,
         tone: 'tone-primary',
     },
     {
-        label: 'Paiements échoués',
+        label: t('dashboard.kpi_failed_payments_label', 'Paiements échoués'),
         value: paymentsFailed.value,
-        hint: `${paymentsPending.value} en attente`,
+        hint: `${paymentsPending.value} ${t('status.pending').toLowerCase()}`,
         progress: paymentsTotal.value > 0 ? Math.round((paymentsFailed.value / paymentsTotal.value) * 100) : 0,
         tone: 'tone-danger',
     },
     {
-        label: 'Collecté cette semaine',
+        label: t('dashboard.kpi_collected_week_label', 'Collecté cette semaine'),
         value: `${formatMoney(paidAmount.value)} €`,
-        hint: `${paymentsPaid.value} paiements validés`,
+        hint: `${paymentsPaid.value} ${t('dashboard.kpi_validated_payments_hint_suffix', 'paiements validés')}`,
         progress: paymentsTotal.value > 0 ? Math.round((paymentsPaid.value / paymentsTotal.value) * 100) : 0,
         tone: 'tone-success',
     },
     {
-        label: 'Disponibilité système',
+        label: t('dashboard.kpi_uptime_label', 'Disponibilité système'),
         value: `${uptime.value}%`,
-        hint: 'Monitoring unifié',
+        hint: t('dashboard.kpi_uptime_hint', 'Monitoring unifié'),
         progress: Math.round(uptime.value),
         tone: 'tone-info',
     },
@@ -181,7 +181,7 @@ const filteredTickets = computed(() => {
 const activityFeed = computed(() => {
     const ticketEvents = props.recentTickets.map((ticket) => ({
         key: `ticket-${ticket.id}`,
-        type: 'Ticket',
+        type: t('dashboard.activity_ticket', 'Ticket'),
         title: ticket.title,
         status: ticket.status,
         user: ticket.user,
@@ -191,7 +191,7 @@ const activityFeed = computed(() => {
 
     const paymentEvents = props.recentPayments.map((payment) => ({
         key: `payment-${payment.id}`,
-        type: 'Paiement',
+        type: t('dashboard.activity_payment', 'Paiement'),
         title: `${formatMoney(payment.amount)} €`,
         status: payment.status,
         user: payment.user,
@@ -251,12 +251,16 @@ onBeforeUnmount(() => {
         <template #header>
             <div class="dash-title-wrap">
                 <div>
-                    <p class="dash-kicker">Workspace cockpit</p>
+                    <p class="dash-kicker">{{ t('dashboard.workspace_kicker', 'Workspace cockpit') }}</p>
                     <h2>{{ t('dashboard.title', 'Dashboard') }}</h2>
                 </div>
                 <div class="header-actions">
-                    <Link v-if="can.create_ticket" :href="route('tickets.create')" class="btn btn-ghost">Nouveau ticket</Link>
-                    <Link v-if="can.create_payment" :href="route('payments.create')" class="btn btn-primary">Nouveau paiement</Link>
+                    <Link v-if="can.create_ticket" :href="route('tickets.create')" class="btn btn-ghost">
+                        {{ t('dashboard.quick_new_ticket', 'Nouveau ticket') }}
+                    </Link>
+                    <Link v-if="can.create_payment" :href="route('payments.create')" class="btn btn-primary">
+                        {{ t('dashboard.quick_new_payment', 'Nouveau paiement') }}
+                    </Link>
                 </div>
             </div>
         </template>
@@ -268,11 +272,15 @@ onBeforeUnmount(() => {
                         <path d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z" />
                         <path d="m21 21-4.3-4.3" />
                     </svg>
-                    <input v-model="searchQuery" type="text" placeholder="Rechercher un ticket, utilisateur, id..." />
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        :placeholder="t('dashboard.search_placeholder', 'Rechercher un ticket, utilisateur, id...')"
+                    />
                 </label>
 
                 <div class="toolbar-right">
-                    <button type="button" class="icon-btn" aria-label="Notifications">
+                    <button type="button" class="icon-btn" :aria-label="t('dashboard.notifications_aria', 'Notifications')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M15 17H5l1.2-1.6a3 3 0 0 0 .6-1.8V10a5 5 0 1 1 10 0v3.6a3 3 0 0 0 .6 1.8L18.6 17H15Z" />
                             <path d="M10 19a2 2 0 0 0 4 0" />
@@ -283,7 +291,7 @@ onBeforeUnmount(() => {
                         <span class="avatar">{{ userInitial }}</span>
                         <div>
                             <strong>{{ userName }}</strong>
-                            <p>Support team</p>
+                            <p>{{ t('dashboard.support_team', 'Support team') }}</p>
                         </div>
                     </div>
                 </div>
@@ -304,10 +312,10 @@ onBeforeUnmount(() => {
                 <article class="chart-card reveal-node" :ref="registerReveal">
                     <div class="section-head">
                         <div>
-                            <p>Vue analytique</p>
-                            <h3>Charge tickets & paiements</h3>
+                            <p>{{ t('dashboard.analytics_kicker', 'Vue analytique') }}</p>
+                            <h3>{{ t('dashboard.analytics_title', 'Charge tickets & paiements') }}</h3>
                         </div>
-                        <span class="chip">7 jours</span>
+                        <span class="chip">{{ t('dashboard.analytics_range', '7 jours') }}</span>
                     </div>
 
                     <div class="chart-wrap">
@@ -336,13 +344,13 @@ onBeforeUnmount(() => {
                 <article class="activity-card reveal-node" :ref="registerReveal">
                     <div class="section-head">
                         <div>
-                            <p>Activité récente</p>
-                            <h3>Derniers événements</h3>
+                            <p>{{ t('dashboard.activity_stream', 'Flux d’activité') }}</p>
+                            <h3>{{ t('dashboard.activity_title', 'Derniers événements') }}</h3>
                         </div>
                     </div>
 
                     <div v-if="activityFeed.length === 0" class="empty-box">
-                        Aucun événement récent.
+                        {{ t('dashboard.no_activity', 'Aucune activité récente pour le moment.') }}
                     </div>
 
                     <ul v-else class="activity-list">
@@ -360,10 +368,12 @@ onBeforeUnmount(() => {
             <section class="table-card reveal-node" :ref="registerReveal">
                 <div class="section-head">
                     <div>
-                        <p>Tickets</p>
-                        <h3>Vue opérationnelle</h3>
+                        <p>{{ t('nav.tickets', 'Tickets') }}</p>
+                        <h3>{{ t('dashboard.operational_view_title', 'Vue opérationnelle') }}</h3>
                     </div>
-                    <Link :href="route('tickets.index')" class="chip chip-link">Voir tout</Link>
+                    <Link :href="route('tickets.index')" class="chip chip-link">
+                        {{ t('common.view_all', 'Voir tout') }}
+                    </Link>
                 </div>
 
                 <div class="table-wrap" v-if="filteredTickets.length > 0">
@@ -371,11 +381,11 @@ onBeforeUnmount(() => {
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Titre</th>
-                                <th>Demandeur</th>
-                                <th>Statut</th>
-                                <th>Date</th>
-                                <th>Action</th>
+                                <th>{{ t('common.title') }}</th>
+                                <th>{{ t('common.owner') }}</th>
+                                <th>{{ t('common.status') }}</th>
+                                <th>{{ t('common.created_at') }}</th>
+                                <th>{{ t('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -390,7 +400,9 @@ onBeforeUnmount(() => {
                                 </td>
                                 <td>{{ formatDate(ticket.created_at) }}</td>
                                 <td>
-                                    <Link :href="route('tickets.show', ticket.id)" class="row-link">Ouvrir</Link>
+                                    <Link :href="route('tickets.show', ticket.id)" class="row-link">
+                                        {{ t('dashboard.open_action', 'Ouvrir') }}
+                                    </Link>
                                 </td>
                             </tr>
                         </tbody>
@@ -398,7 +410,7 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-else class="empty-box">
-                    Aucun ticket dans cette vue.
+                    {{ t('dashboard.empty_tickets_hint', 'Créez votre premier ticket pour démarrer le suivi support.') }}
                 </div>
             </section>
         </div>

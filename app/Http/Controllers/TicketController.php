@@ -50,6 +50,11 @@ class TicketController extends Controller
                     'email' => $ticket->user?->email,
                 ],
                 'created_at' => $ticket->created_at?->toIso8601String(),
+                'can' => [
+                    'view' => $user->can('view', $ticket),
+                    'update' => $user->can('update', $ticket),
+                    'delete' => $user->can('delete', $ticket),
+                ],
             ]),
             'statuses' => TicketStatus::values(),
             'filters' => [

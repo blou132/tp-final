@@ -14,7 +14,7 @@ class TicketApiController extends Controller
 {
     public function openTickets(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Ticket::class);
+        $this->authorizeApiRead($request);
 
         $tickets = $this->visibleTicketsQuery($request)
             ->open()
@@ -28,7 +28,7 @@ class TicketApiController extends Controller
 
     public function closedTickets(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Ticket::class);
+        $this->authorizeApiRead($request);
 
         $tickets = $this->visibleTicketsQuery($request)
             ->closed()
@@ -42,7 +42,7 @@ class TicketApiController extends Controller
 
     public function userTickets(Request $request, string $email): JsonResponse
     {
-        $this->authorize('viewAny', Ticket::class);
+        $this->authorizeApiRead($request);
 
         $actor = $request->user();
 
@@ -70,7 +70,7 @@ class TicketApiController extends Controller
 
     public function stats(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Ticket::class);
+        $this->authorizeApiRead($request);
 
         $query = $this->visibleTicketsQuery($request);
         $total = (clone $query)->count();
@@ -113,6 +113,15 @@ class TicketApiController extends Controller
         }
 
         return $query;
+    }
+
+    private function authorizeApiRead(Request $request): void
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        if (! $request->user()->hasPermissionTo('api.tickets.view', 'web')) {
+            abort(403);
+        }
     }
 
     private function serializeTicket(Ticket $ticket): array

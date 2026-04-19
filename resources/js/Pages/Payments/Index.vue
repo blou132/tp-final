@@ -284,16 +284,27 @@ const sizeBand = (payment) => {
                                 <td class="table-cell text-slate-600 hidden 2xl:table-cell">{{ payment.user?.email ?? '-' }}</td>
                                 <td class="table-cell text-slate-600 hidden xl:table-cell">{{ formatDate(payment.created_at) }}</td>
                                 <td class="table-cell">
-                                    <div class="flex flex-wrap gap-1">
-                                        <Link :href="route('payments.show', payment.id)" class="btn-ghost">{{ t('common.details') }}</Link>
-                                        <Link :href="route('payments.edit', payment.id)" class="btn-ghost">{{ t('common.edit') }}</Link>
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        <Link v-if="payment.can?.view" :href="route('payments.show', payment.id)" class="btn-ghost">
+                                            {{ t('common.details') }}
+                                        </Link>
+                                        <Link v-if="payment.can?.update" :href="route('payments.edit', payment.id)" class="btn-ghost">
+                                            {{ t('common.edit') }}
+                                        </Link>
                                         <button
+                                            v-if="payment.can?.delete"
                                             type="button"
                                             class="btn-ghost !text-rose-600 hover:!bg-rose-50"
                                             @click="openDeleteDialog(payment)"
                                         >
                                             {{ t('common.delete') }}
                                         </button>
+                                        <span
+                                            v-if="!payment.can?.view && !payment.can?.update && !payment.can?.delete"
+                                            class="text-xs font-medium text-slate-400"
+                                        >
+                                            —
+                                        </span>
                                     </div>
                                 </td>
                             </tr>

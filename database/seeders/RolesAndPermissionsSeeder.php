@@ -46,6 +46,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'payments.view',
             'payments.create',
             'payments.update',
+            'payments.delete',
             'api.tickets.view',
         ]);
     }

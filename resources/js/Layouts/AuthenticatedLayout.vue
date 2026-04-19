@@ -63,6 +63,7 @@ const todayLabel = computed(() =>
 const localeSwitchHref = (localeCode) =>
     route('locale.switch', {
         locale: localeCode,
+        redirect: page.url ?? '/',
     });
 
 const navItems = [
@@ -167,7 +168,7 @@ const closeMobileSidebar = () => {
                             </div>
 
                             <div class="hidden items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:flex">
-                                <Link
+                                <a
                                     v-for="localeCode in supportedLocales"
                                     :key="localeCode"
                                     :href="localeSwitchHref(localeCode)"
@@ -179,7 +180,7 @@ const closeMobileSidebar = () => {
                                     ]"
                                 >
                                     {{ localeCode }}
-                                </Link>
+                                </a>
                             </div>
 
                             <Dropdown align="right" width="48">
